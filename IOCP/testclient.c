@@ -1,7 +1,4 @@
 #include <stdio.h>
-#include "common_hash_function.h"
-#include "hash_map.h"
-
 #include <winsock2.h>
 #include <WinBase.h>
 #include <Winerror.h>
@@ -16,7 +13,7 @@ uint32_t send_request = 0;
 uint32_t tick = 0;
 uint32_t now = 0;
 uint32_t bf_count = 0;
-#define MAX_CLIENT 350
+#define MAX_CLIENT 50
 static struct connection *clients[MAX_CLIENT];
 uint32_t last_recv = 0;
 uint32_t ava_interval = 0;
@@ -69,6 +66,11 @@ void on_process_packet(struct connection *c,rpacket_t r)
 		ava_interval /= 2;
 	}
 	++packet_recv;
+	wpacket_t wpk = wpacket_create(64,0);
+	wpacket_write_uint32(wpk,(uint32_t)s);
+	wpacket_write_uint32(wpk,GetTickCount());
+	wpacket_write_string(wpk,"hello kenny");
+	connection_send(c,wpk,0);	
 	rpacket_destroy(&r);
 	
 }
@@ -92,10 +94,10 @@ void on_connect_callback(SOCKET s,const char *ip,uint32_t port,void *ud)
 		ioctlsocket(s,FIONBIO,(uint32_t*)&ul);
 		//setsockopt(s,IPPROTO_TCP,TCP_NODELAY,(char*)&optval,sizeof(optval));         //不采用延时算法 
 
-		c = connection_create(s,on_process_packet,remove_client);
+		c = connection_create(s,0,on_process_packet,remove_client);
 		add_client(c);
 		Bind2Engine(*iocp,(Socket_t)c);
-		wpk = wpacket_create(64);
+		wpk = wpacket_create(64,0);
 		wpacket_write_uint32(wpk,(uint32_t)s);
 		wpacket_write_uint32(wpk,GetTickCount());
 		wpacket_write_string(wpk,"hello kenny");
@@ -106,7 +108,7 @@ void on_connect_callback(SOCKET s,const char *ip,uint32_t port,void *ud)
 
 void test1()
 {
-	wpacket_t w = wpacket_create(12);
+	wpacket_t w = wpacket_create(12,0);
 	rpacket_t r,r1;
 	wpacket_t w1 = 0;
 	wpacket_t w2;
@@ -129,7 +131,7 @@ void test1()
 
 void test2()
 {
-	wpacket_t w = wpacket_create(12);
+	wpacket_t w = wpacket_create(12,0);
 	rpacket_t r;
 	write_pos wp;
 	wpacket_write_uint32(w,1);
@@ -164,7 +166,7 @@ void testNet()
 	con =  connector_create();
 	for( ; i < MAX_CLIENT;++i)
 	{
-		ret = connector_connect(con,"192.168.6.11",8010,on_connect_callback,&iocp,1000*20);
+		ret = connector_connect(con,"192.168.6.11",8798,on_connect_callback,&iocp,1000*20);
 		Sleep(1);
 	}
 	//while(connect_count < 1)
@@ -183,7 +185,7 @@ void testNet()
 			send_request = 0;
 			ava_interval = 0;
 		}
-		if(ava_interval > 200)
+		/*if(ava_interval > 200)
 			send_interval = 200;
 		else
 			send_interval = 8;
@@ -194,14 +196,14 @@ void testNet()
 			{
 				if(clients[i])
 				{
-					wpk = wpacket_create(64);
+					wpk = wpacket_create(64,0);
 					wpacket_write_uint32(wpk,clients[i]->socket.sock);
 					wpacket_write_uint32(wpk,GetTickCount());
 					wpacket_write_string(wpk,"hello kenny");
 					connection_send(clients[i],wpk,0);
 				}
 			}
-		}
+		}*/
 	}
 
 }

@@ -72,10 +72,8 @@ void on_process_packet(struct connection *c,rpacket_t r)
 {
 	//uint32_t i = 0;
 	//send2_all_client(r);
-	uint32_t pk_size = rpacket_len(r);
 	
 	wpacket_t w = wpacket_create_by_rpacket(r);
-	printf("pk_size:%d\n",pk_size);
 	connection_send(c,w,0);
 	rpacket_destroy(&r);
 	//++packet_recv;	
@@ -85,7 +83,7 @@ void accept_callback(SOCKET s,void *ud)
 {
 	DWORD err_code = 0;
 	HANDLE *iocp = (HANDLE*)ud;
-	struct connection *c = connection_create(s,1,on_process_packet,remove_client);
+	struct connection *c = connection_create(s,0,on_process_packet,remove_client);
 	add_client(c);
 	//++clientcount;
 	printf("cli fd:%d\n",s);
@@ -96,7 +94,7 @@ void accept_callback(SOCKET s,void *ud)
 
 DWORD WINAPI Listen(void *arg)
 {
-	acceptor_t a = create_acceptor("192.168.6.87",8010,&accept_callback,arg);
+	acceptor_t a = create_acceptor("192.168.6.11",8798,&accept_callback,arg);
 	while(1)
 		acceptor_run(a,100);
 	return 0;
@@ -123,7 +121,7 @@ int32_t main()
 	while(1)
 	{
 		RunEngine(iocp,15);
-		/*now = GetTickCount();
+		now = GetTickCount();
 		if(now - tick > 1000)
 		{
 			printf("recv:%u,send:%u,s_req:%u,pool_size:%u,bf:%u,sp:%u,iocp:%u\n",packet_recv,packet_send,send_request,wpacket_pool_size(),bf_count,s_p,iocp_count);
@@ -134,7 +132,7 @@ int32_t main()
 			s_p = 0;
 			iocp_count = 0;
 		}
-		if(now - last_send_tick > 50)
+		/*if(now - last_send_tick > 50)
 		{
 			//心跳,每50ms集中发一次包
 			last_send_tick = now;

@@ -105,6 +105,7 @@ void RecvFinish(struct Socket *s,struct OverLapContext *o,int32_t bytestransfer,
 		if(bytestransfer == 0 || bytestransfer < 0 && err_code != WSA_IO_PENDING)
 		{
 			c->recv_overlap.isUsed = 0;
+			c->is_close = 1;
 			if(!c->send_overlap.isUsed)
 			{
 				printf("断开:%d\n",err_code);
@@ -308,9 +309,16 @@ void SendFinish(struct Socket *s,struct OverLapContext *o,int32_t bytestransfer,
 				o = prepare_send(c);
 				if(!o)
 				{
-					//没有数据需要发送了
-					c->send_overlap.isUsed = 0;
-					return;
+					if(c->is_close == 1)
+					{
+						bytestransfer = 0;
+						break;
+					}else
+					{
+						//没有数据需要发送了
+						c->send_overlap.isUsed = 0;
+						return;
+					}
 				}
 				bytestransfer = WSA_Send(&c->socket,o,1,&err_code);
 			}
@@ -333,6 +341,7 @@ struct connection *connection_create(SOCKET s,uint8_t is_raw,process_packet _pro
 	c->unpack_pos = 0;
 	c->unpack_size = 0;
 	c->raw = is_raw;
+	c->is_close = 0;
 	return c;
 }
 

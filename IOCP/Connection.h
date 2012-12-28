@@ -24,6 +24,7 @@ struct connection
 	struct OVERLAPCONTEXT recv_overlap;
 
 	uint32_t unpack_size; //还未解包的数据大小
+	uint8_t  is_close;
 
 	uint32_t unpack_pos;
 	uint32_t next_recv_pos;

@@ -1,1 +1,0 @@
-gcc -O2 -o server.exe testserver.c iocp.a -lws2_32
