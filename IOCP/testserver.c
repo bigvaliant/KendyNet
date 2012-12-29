@@ -94,7 +94,7 @@ void accept_callback(SOCKET s,void *ud)
 
 DWORD WINAPI Listen(void *arg)
 {
-	acceptor_t a = create_acceptor("192.168.6.11",8798,&accept_callback,arg);
+	acceptor_t a = create_acceptor("127.0.0.1",8010,&accept_callback,arg);
 	while(1)
 		acceptor_run(a,100);
 	return 0;

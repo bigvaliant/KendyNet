@@ -242,7 +242,7 @@ int32_t    WSA_Send(Socket_t socket,struct OverLapContext *OverLap,int32_t now,u
 	ZeroMemory(&OverLap->m_overLapped, sizeof(OVERLAPPED));
 	OverLap->m_Type = IO_SENDFINISH;
 	bytetransfer =  raw_Send(socket,OverLap,err_code);
-	if(bytetransfer > 0)
+	if(bytetransfer >= 0)
 	{
 		bytetransfer = -1;
 		*err_code = WSA_IO_PENDING;
@@ -259,7 +259,7 @@ int32_t    WSA_Recv(Socket_t socket,struct OverLapContext *OverLap,int32_t now,u
 
 	OverLap->m_Type = IO_RECVFINISH;
 	bytetransfer = raw_Recv(socket,OverLap,err_code);
-	if(bytetransfer > 0)
+	if(bytetransfer >= 0)
 	{
 		bytetransfer = -1;
 		*err_code = WSA_IO_PENDING;

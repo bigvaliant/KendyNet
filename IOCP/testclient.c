@@ -166,7 +166,7 @@ void testNet()
 	con =  connector_create();
 	for( ; i < MAX_CLIENT;++i)
 	{
-		ret = connector_connect(con,"192.168.6.11",8798,on_connect_callback,&iocp,1000*20);
+		ret = connector_connect(con,"127.0.0.1",8010,on_connect_callback,&iocp,1000*20);
 		Sleep(1);
 	}
 	//while(connect_count < 1)
