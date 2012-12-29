@@ -16,7 +16,7 @@ uint32_t bf_count = 0;
 uint32_t clientcount = 0;
 uint32_t last_send_tick = 0;
 
-#define MAX_CLIENT 1000
+#define MAX_CLIENT 500
 static struct connection *clients[MAX_CLIENT];
 
 void init_clients()
@@ -76,7 +76,7 @@ void on_process_packet(struct connection *c,rpacket_t r)
 	//wpacket_t w = wpacket_create_by_rpacket(r);
 	//connection_send(c,w,0);
 	rpacket_destroy(&r);
-	//++packet_recv;	
+	++packet_recv;	
 }
 
 void accept_callback(SOCKET s,void *ud)
@@ -102,6 +102,7 @@ DWORD WINAPI Listen(void *arg)
 	return 0;
 }
 unsigned long iocp_count = 0; 
+unsigned long use_time = 0;
 int32_t main(int argc,char **argv)
 {
 	DWORD dwThread;
@@ -111,10 +112,8 @@ int32_t main(int argc,char **argv)
 	port = atoi(argv[2]);
 	uint32_t i = 0;
 	//getchar();
-	init_wpacket_pool(10000000);
+	init_wpacket_pool(1000000);
 	init_rpacket_pool(500000);
-	buffer_init_maxbuffer_size(2000);
-	buffer_init_64(2000);
 	init_clients();
 	InitNetSystem();
 	iocp = CreateNetEngine(1);
@@ -123,19 +122,23 @@ int32_t main(int argc,char **argv)
 	tick = GetTickCount();
 	while(1)
 	{
+		uint32_t t = GetTickCount();
 		RunEngine(iocp,15);
+		t = GetTickCount()-t;
+		use_time = (use_time+t)/2;		
 		now = GetTickCount();
 		if(now - tick > 1000)
 		{
-			printf("recv:%u,send:%u,s_req:%u,pool_size:%u,bf:%u,sp:%u,iocp:%u\n",packet_recv,packet_send,send_request,wpacket_pool_size(),bf_count,s_p,iocp_count);
+			printf("recv:%u,send:%u,s_req:%u,pool_size:%u,bf:%u,sp:%u,iocp:%u\n",packet_recv,packet_send,send_request,wpacket_pool_size(),use_time,s_p,iocp_count);
 			tick = now;
 			packet_recv = 0;
 			packet_send = 0;
 			send_request = 0;
-			s_p = 0;
-			iocp_count = 0;
+			//s_p = 0;
+			//iocp_count = 0;
+			use_time = 0;
 		}
-		if(now - last_send_tick > 50)
+		if(now - last_send_tick > 25)
 		{
 			//心跳,每50ms集中发一次包
 			last_send_tick = now;

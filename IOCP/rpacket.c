@@ -41,7 +41,9 @@ rpacket_t rpacket_create(buffer_t b,uint32_t pos,uint32_t pk_len,uint8_t is_raw)
 	if(is_raw)
 		r->rpos = pos;
 	else
-		r->rpos = pos + sizeof(r->len);
+		r->rpos = (pos + sizeof(r->len))%r->buf->capacity;
+	if(r->rpos < r->begin_pos)
+		r->readbuf = buffer_acquire(r->readbuf,r->readbuf->next);
 	r->raw = is_raw;
 	return r;
 }
@@ -72,13 +74,9 @@ rpacket_t rpacket_create_by_wpacket(struct wpacket *w)
 	{
 		//这里的len只记录构造时wpacket的len,之后wpacket的写入不会影响到rpacket的len
 		r->len = w->data_size - sizeof(r->len);
-		if(r->readbuf->size - r->begin_pos > sizeof(r->len))
-			r->rpos = w->begin_pos + sizeof(r->len);
-		else
-		{
+		r->rpos = (r->begin_pos + sizeof(r->len))%r->buf->capacity;
+		if(r->rpos < r->begin_pos)
 			r->readbuf = buffer_acquire(r->readbuf,r->readbuf->next);
-			r->rpos = 0 + sizeof(r->len);
-		}
 	}
 	r->data_remain = r->len;
 	return r;

@@ -8,7 +8,7 @@
 #define BUFFER_SIZE 16384
 
 //接收相关函数
-static void update_next_recv_pos(struct connection *c,int32_t bytestransfer)
+static inline void update_next_recv_pos(struct connection *c,int32_t bytestransfer)
 {
 	uint32_t size;		
 	while(bytestransfer)
@@ -29,7 +29,7 @@ static void update_next_recv_pos(struct connection *c,int32_t bytestransfer)
 }
 
 //解包
-static /*rpacket_t*/void unpack(struct connection *c)
+static inline void unpack(struct connection *c)
 {
 	uint32_t pk_len = 0;
 	uint32_t pk_total_size;
@@ -45,6 +45,11 @@ static /*rpacket_t*/void unpack(struct connection *c)
 			pk_total_size = pk_len+sizeof(pk_len);
 			if(pk_total_size > c->unpack_size)
 				break;//return 0;
+			if(pk_total_size != 28)
+			{
+				printf("err-------\n");
+				exit(0);
+			}
 			r = rpacket_create(c->unpack_buf,c->unpack_pos,pk_len,c->raw);
 			//调整unpack_buf和unpack_pos
 			while(pk_total_size)
@@ -125,8 +130,6 @@ void RecvFinish(struct Socket *s,struct OverLapContext *o,int32_t bytestransfer,
 				update_next_recv_pos(c,bytestransfer);
 				c->unpack_size += bytestransfer;
 				unpack(c);
-				//while(r = unpack(c))
-				//	c->_process_packet(c,r);
 				//发起另一次读操作
 				buf = c->next_recv_buf;
 				pos = c->next_recv_pos;
@@ -160,7 +163,8 @@ void RecvFinish(struct Socket *s,struct OverLapContext *o,int32_t bytestransfer,
 }
 
 //发送相关函数
-static  struct OverLapContext *prepare_send(struct connection *c)
+extern uint32_t s_p;
+static  inline struct OverLapContext *prepare_send(struct connection *c)
 {
 	int32_t i = 0;
 	wpacket_t w = (wpacket_t)list_head(c->send_list);
@@ -193,11 +197,12 @@ static  struct OverLapContext *prepare_send(struct connection *c)
 		c->send_overlap.m_super.wbuf = c->wsendbuf;
 		O = (struct OverLapContext *)&c->send_overlap;
 	}
+	
 	return O;
 
 }
 extern DWORD packet_send;
-static void update_send_list(struct connection *c,int32_t bytestransfer)
+static inline void update_send_list(struct connection *c,int32_t bytestransfer)
 {
 	wpacket_t w;
 	uint32_t size;
@@ -207,6 +212,7 @@ static void update_send_list(struct connection *c,int32_t bytestransfer)
 		if(!w)
 		{
 			//记录错误
+			assert(w);
 			break;
 		}
 		if((uint32_t)bytestransfer >= w->data_size)
@@ -236,7 +242,7 @@ static void update_send_list(struct connection *c,int32_t bytestransfer)
 	}
 }
 
-extern uint32_t s_p;
+
 int32_t connection_send(struct connection *c,wpacket_t w,int32_t send)
 {
 	int32_t bytestransfer = 0;
@@ -258,11 +264,11 @@ int32_t connection_send(struct connection *c,wpacket_t w,int32_t send)
 			}
 			else if(bytestransfer > 0)
 			{
+				
 				update_send_list(c,bytestransfer);
 			}
 			else 
 			{
-				++s_p;
 				return 1;
 			}
 		}
@@ -304,8 +310,8 @@ void SendFinish(struct Socket *s,struct OverLapContext *o,int32_t bytestransfer,
 		else
 		{
 			while(bytestransfer > 0)
-			{
-				update_send_list(c,bytestransfer);
+			{	
+				update_send_list(c,bytestransfer);				
 				o = prepare_send(c);
 				if(!o)
 				{
@@ -315,6 +321,7 @@ void SendFinish(struct Socket *s,struct OverLapContext *o,int32_t bytestransfer,
 						break;
 					}else
 					{
+						
 						//没有数据需要发送了
 						c->send_overlap.isUsed = 0;
 						return;

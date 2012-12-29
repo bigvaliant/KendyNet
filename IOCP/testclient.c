@@ -119,9 +119,7 @@ int main(int32_t argc,char **argv)
 	uint32_t send_tick = 0;
 	wpacket_t wpk;
 	init_wpacket_pool(500000);
-	init_rpacket_pool(10000000);
-	buffer_init_maxbuffer_size(2000);
-	buffer_init_64(2000);
+	init_rpacket_pool(1000000);
 	InitNetSystem();
 	init_clients();
 	iocp = CreateNetEngine(1);

@@ -51,7 +51,7 @@ void   CloseNetEngine(HANDLE CompletePort)
 {
 	CloseHandle(CompletePort);
 }
-
+extern uint32_t iocp_count;
 /* return:
 *  >  0 :bytestransfer
 *  == 0 :WSA_IO_PENDING
@@ -88,7 +88,7 @@ static int32_t raw_Recv(Socket_t s,struct OverLapContext *overLapped,uint32_t *e
 		return dwBytes;
 }
 
-extern uint32_t iocp_count;
+
 typedef void (*CallBack)(struct Socket*,struct OverLapContext*,int32_t,uint32_t);
 int    RunEngine(HANDLE CompletePort,DWORD timeout)
 {
@@ -114,7 +114,6 @@ int    RunEngine(HANDLE CompletePort,DWORD timeout)
 		
 		if(FALSE == bReturn && !overLapped)// || socket == NULL || overLapped == NULL)
 		{
-			++iocp_count;
 			break;
 		}
 		if(0 == bytesTransfer)
@@ -137,7 +136,6 @@ int    RunEngine(HANDLE CompletePort,DWORD timeout)
 		}
 		else
 		{
-			//++iocp_count;
 #ifdef _WIN7
 			if(overLapped->m_Type & IO_REQUEST)
 			{
@@ -238,7 +236,7 @@ int32_t    WSA_Send(Socket_t socket,struct OverLapContext *OverLap,int32_t now,u
 {
 	int32_t bytetransfer = 0;
 	if(!socket->complete_port)
-		return UNBIND2ENGINE;
+		return UNBIND2ENGINE;	
 	ZeroMemory(&OverLap->m_overLapped, sizeof(OVERLAPPED));
 	OverLap->m_Type = IO_SENDFINISH;
 	bytetransfer =  raw_Send(socket,OverLap,err_code);
