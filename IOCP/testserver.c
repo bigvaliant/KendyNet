@@ -71,10 +71,10 @@ void remove_client(struct connection *c)
 void on_process_packet(struct connection *c,rpacket_t r)
 {
 	//uint32_t i = 0;
-	//send2_all_client(r);
+	send2_all_client(r);
 	
-	wpacket_t w = wpacket_create_by_rpacket(r);
-	connection_send(c,w,0);
+	//wpacket_t w = wpacket_create_by_rpacket(r);
+	//connection_send(c,w,0);
 	rpacket_destroy(&r);
 	//++packet_recv;	
 }
@@ -91,21 +91,24 @@ void accept_callback(SOCKET s,void *ud)
 	//发出第一个读请求
 	connection_recv(c);
 }
+const char *ip;
+uint32_t port;
 
 DWORD WINAPI Listen(void *arg)
 {
-	acceptor_t a = create_acceptor("127.0.0.1",8010,&accept_callback,arg);
+	acceptor_t a = create_acceptor(ip,port,&accept_callback,arg);
 	while(1)
 		acceptor_run(a,100);
 	return 0;
 }
 unsigned long iocp_count = 0; 
-int32_t main()
+int32_t main(int argc,char **argv)
 {
 	DWORD dwThread;
 	HANDLE iocp;
 	uint32_t n;
-
+	ip = argv[1];
+	port = atoi(argv[2]);
 	uint32_t i = 0;
 	//getchar();
 	init_wpacket_pool(10000000);
@@ -132,7 +135,7 @@ int32_t main()
 			s_p = 0;
 			iocp_count = 0;
 		}
-		/*if(now - last_send_tick > 50)
+		if(now - last_send_tick > 50)
 		{
 			//心跳,每50ms集中发一次包
 			last_send_tick = now;
@@ -144,7 +147,7 @@ int32_t main()
 					connection_send(clients[i],0,0);
 				}
 			}
-		}*/
+		}
 	}
 	return 0;
 }

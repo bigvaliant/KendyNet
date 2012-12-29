@@ -13,7 +13,7 @@ uint32_t send_request = 0;
 uint32_t tick = 0;
 uint32_t now = 0;
 uint32_t bf_count = 0;
-#define MAX_CLIENT 50
+#define MAX_CLIENT 1000
 static struct connection *clients[MAX_CLIENT];
 uint32_t last_recv = 0;
 uint32_t ava_interval = 0;
@@ -66,11 +66,12 @@ void on_process_packet(struct connection *c,rpacket_t r)
 		ava_interval /= 2;
 	}
 	++packet_recv;
-	wpacket_t wpk = wpacket_create(64,0);
+	/*wpacket_t wpk = wpacket_create(64,0);
 	wpacket_write_uint32(wpk,(uint32_t)s);
 	wpacket_write_uint32(wpk,GetTickCount());
 	wpacket_write_string(wpk,"hello kenny");
 	connection_send(c,wpk,0);	
+	*/
 	rpacket_destroy(&r);
 	
 }
@@ -106,51 +107,12 @@ void on_connect_callback(SOCKET s,const char *ip,uint32_t port,void *ud)
 	}
 }
 
-void test1()
-{
-	wpacket_t w = wpacket_create(12,0);
-	rpacket_t r,r1;
-	wpacket_t w1 = 0;
-	wpacket_t w2;
-	const char *str;
-	wpacket_write_string(w,"hello kenny");
-	r = rpacket_create_by_wpacket(w);
-	wpacket_destroy(&w);
-	str = rpacket_read_string(r);
-	printf("str=%s\n",str);
-	w1 = wpacket_create_by_rpacket(r);
-	w2 = wpacket_create_by_rpacket(r);
-	r1 = rpacket_create_by_wpacket(w1);
-	str = rpacket_read_string(r1);
-	printf("str=%s\n",str);
-	rpacket_destroy(&r);
-	rpacket_destroy(&r1);
-	wpacket_destroy(&w1);
-	wpacket_destroy(&w2);
-}
-
-void test2()
-{
-	wpacket_t w = wpacket_create(12,0);
-	rpacket_t r;
-	write_pos wp;
-	wpacket_write_uint32(w,1);
-	wp = wpacket_get_writepos(w);
-	wpacket_write_uint16(w,2);
-	wpacket_write_string(w,"hello kenny");
-	wpacket_rewrite_uint16(&wp,4);
-    r = rpacket_create_by_wpacket(w);
-	printf("%u\n",rpacket_read_uint32(r));
-	printf("%u\n",rpacket_read_uint16(r));
-	printf("%s\n",rpacket_read_string(r));
-	rpacket_destroy(&r);
-	wpacket_destroy(&w);
-}
-
-void testNet()
-{
+int main(int32_t argc,char **argv)
+{	
 	HANDLE iocp;
-	
+	const char *ip = argv[1];
+	uint32_t port = atoi(argv[2]);
+	int32_t client_count = atoi(argv[3]);
 	int32_t ret;
 	int32_t i = 0;
 	uint32_t send_interval = 8;
@@ -164,9 +126,9 @@ void testNet()
 	init_clients();
 	iocp = CreateNetEngine(1);
 	con =  connector_create();
-	for( ; i < MAX_CLIENT;++i)
+	for( ; i < client_count;++i)
 	{
-		ret = connector_connect(con,"127.0.0.1",8010,on_connect_callback,&iocp,1000*20);
+		ret = connector_connect(con,ip,port,on_connect_callback,&iocp,1000*20);
 		Sleep(1);
 	}
 	//while(connect_count < 1)
@@ -185,7 +147,7 @@ void testNet()
 			send_request = 0;
 			ava_interval = 0;
 		}
-		/*if(ava_interval > 200)
+		if(ava_interval > 200)
 			send_interval = 200;
 		else
 			send_interval = 8;
@@ -203,16 +165,9 @@ void testNet()
 					connection_send(clients[i],wpk,0);
 				}
 			}
-		}*/
+		}
 	}
 
-}
-
-int main()
-{	
-	//test1();
-	//test2();
-	testNet();
 	getchar();
 	return 0;
 }
