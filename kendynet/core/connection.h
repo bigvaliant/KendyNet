@@ -71,7 +71,7 @@ struct connection
         void    *usr_ptr;
 	};
 	uint64_t last_recv;
-	struct timer_item wheelitem;
+	struct timer_item *_timer_item;
 	uint32_t recv_timeout;
     uint32_t send_timeout;
     CCB_RECV_TIMEOUT cb_recv_timeout;
@@ -82,7 +82,7 @@ struct connection
 };
 
 
-static inline struct timer_item* con2wheelitem(struct connection *con){
+/*static inline struct timer_item* con2wheelitem(struct connection *con){
     return &con->wheelitem;
 }
 
@@ -90,7 +90,7 @@ static inline struct connection *wheelitem2con(struct timer_item *wit)
 {
     struct connection *con = (struct connection*)wit;
     return (struct connection *)((char*)wit - ((char*)&con->wheelitem - (char*)con));
-}
+}*/
 
 struct connection *new_conn(SOCK s,uint8_t is_raw);
 void   release_conn(struct connection *con);

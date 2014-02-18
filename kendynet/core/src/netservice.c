@@ -1,10 +1,11 @@
 #include "netservice.h"
 #include "socket.h"
 
-void check_timeout(struct timer* t,struct timer_item *wit,void *ud)
+int8_t check_timeout(struct timer* t,struct timer_item *wit,void *ud)
 {
+    int8_t ret = 0;
     uint64_t now = GetSystemMs64();
-    struct connection *c = wheelitem2con(wit);
+    struct connection *c = (struct connection*)ud;
     acquire_conn(c);
     if(test_recvable(c->status) && c->cb_recv_timeout && now > c->last_recv + (uint64_t)c->recv_timeout){
 		printf("recv timeout\n");
@@ -18,8 +19,12 @@ void check_timeout(struct timer* t,struct timer_item *wit,void *ud)
             c->cb_send_timeout(c);
 		}
     }
-    if(c->status != SCLOSE) register_timer(t,wit,1);
+    if(c->status != SCLOSE) 
+        register_timer(t,wit,NULL,NULL,1000);
+    else
+        ret = 1;
     release_conn(c);
+    return ret;
 }
 
 static int32_t _bind(struct netservice *n,
@@ -35,10 +40,10 @@ static int32_t _bind(struct netservice *n,
     c->cb_send_timeout = cb_send_timeout;
     c->recv_timeout = rtimeout;
     c->send_timeout = stimeout;
-    c->wheelitem.ud_ptr = (void*)n;
-    c->wheelitem.callback = check_timeout;
+    //c->wheelitem.ud_ptr = (void*)n;
+    //c->wheelitem.callback = check_timeout;
     if(cb_recv_timeout || cb_send_timeout)
-        register_timer(n->timer,con2wheelitem(c),1);
+        c->_timer_item = register_timer(n->timer,NULL,check_timeout,(void*)c,1000);
     return bind2engine(n->engine,c,cb_process_packet,cb_disconnect);
  }
 

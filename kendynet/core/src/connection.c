@@ -337,7 +337,8 @@ void IoFinish(int32_t bytestransfer,st_io *io,uint32_t err_code)
 void connection_destroy(void *arg)
 {
 	struct connection *c = (struct connection*)arg;
-	unregister_timer(con2wheelitem(c));
+	if(c->_timer_item)
+	unregister_timer(&c->_timer_item);
     wpacket_t w;
     while((w = LLIST_POP(wpacket_t,&c->send_list))!=NULL)
         wpk_destroy(&w);

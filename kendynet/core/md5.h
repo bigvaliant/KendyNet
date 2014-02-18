@@ -4,9 +4,10 @@
 *  @author  Roberto Ierusalimschy
 */
 
-
 #ifndef md5_h
 #define md5_h
+
+#include <stdio.h>
 
 //#include <lua.h>
 #define HASHSIZE 16

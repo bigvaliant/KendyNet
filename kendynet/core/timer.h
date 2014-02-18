@@ -18,12 +18,32 @@
 #define _TIMER_H
 #include <time.h>
 #include <stdint.h>
+#include "minheap.h"
+
+struct timer;
+struct timer_item;
+
+//如果返回1则timer_callback调用完之后会释放掉timer_item
+typedef int8_t (*timer_callback)(struct timer*,struct timer_item*,void*);
+
+
+struct timer *new_timer();
+void   delete_timer(struct timer**);
+
+//更新定时器
+void update_timer(struct timer*,uint64_t now);
+struct timer_item* register_timer(struct timer*,struct timer_item*,timer_callback,void *ud,uint64_t timeout);
+void unregister_timer(struct timer_item **);    
+
+
+/*    
 #include "dlist.h"
 
-//5级时间轮，最大到年，最小到秒
+//6级时间轮，最大到年，最小到豪秒
 enum
 {
-	MIN = 0,
+    SEC = 0,
+	MIN,
 	HOUR,
 	DAY,
 	YEAR,
@@ -45,6 +65,6 @@ void   delete_timer(struct timer**);
 void update_timer(struct timer*,time_t now);
 int8_t register_timer(struct timer*,struct timer_item*,time_t timeout);
 void unregister_timer(struct timer_item*);
-
+*/
 
 #endif

@@ -2,7 +2,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include "systime.h"
+/*
 struct wheel
 {
 	time_t   round_time;      //一轮执行完后的时间
@@ -132,3 +133,87 @@ void   delete_timer(struct timer **timer)
 	free(*timer);
 	*timer = NULL;
 }
+*/
+
+
+/*struct timer_item
+{
+    struct heapele _heapele;
+    uint64_t       _timeout;
+    void*          _ud;
+    void (*_callback)(struct timer*,struct timer_item*,void*);
+};*/
+
+struct timer
+{
+	minheap_t _minheap;
+};
+
+struct timer_item
+{
+    struct heapele _heapele;
+    uint64_t       _timeout;
+    void*          _ud;
+    timer_callback _callback;//int8_t (*_callback)(struct timer*,struct timer_item*,void*);
+};
+
+static int8_t _less(struct heapele *l,struct heapele *r)//if l < r return 1,else return 0
+{
+	if(((struct timer_item*)l)->_timeout < ((struct timer_item*)r)->_timeout)
+		return 1;
+	return 0;
+}	
+
+
+struct timer *new_timer()
+{
+	struct timer *t = calloc(1,sizeof(*t));
+	t->_minheap = minheap_create(65536,_less);
+	return t;
+}
+
+void   delete_timer(struct timer **_t)
+{
+	if(_t && *_t){
+		struct timer *t = *_t;
+		minheap_destroy(&t->_minheap);
+		free(t);
+		*_t = NULL;
+	}
+}
+
+//更新定时器
+void update_timer(struct timer *t,uint64_t now)
+{
+	while(1){
+		struct timer_item *item = (struct timer_item*)minheap_min(t->_minheap);
+		if(NULL == item->_ud){
+			minheap_popmin(t->_minheap);
+			free(item);
+		}else if(now >= item->_timeout)
+		{
+			minheap_popmin(t->_minheap);
+			if(item->_callback(t,item,item->_ud))
+				free(item);
+		}else
+			break; 
+	}
+}
+
+struct timer_item* register_timer(struct timer *t,struct timer_item *item,timer_callback cb,void *ud,uint64_t timeout)
+{
+	if(!item){
+		item = calloc(1,sizeof(*item));
+		item->_ud = ud;
+		item->_callback = cb;
+	}
+	item->_timeout = GetSystemMs64()+timeout;
+	minheap_insert(t->_minheap,(struct heapele*)item);
+	return item;
+}
+
+void unregister_timer(struct timer_item **item)
+{
+	(*item)->_ud = NULL;
+	*item = NULL;
+}  
