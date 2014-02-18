@@ -22,7 +22,8 @@
 #include <stdint.h>
 #include <string.h>
 #include "llist.h"
-
+#include "exception.h"
+#include "log.h"
 
 struct callstack_frame
 {
@@ -62,17 +63,25 @@ static inline void clear_call_stack(struct exception_frame *frame)
         LLIST_PUSH_FRONT(&epst->csf_pool,LLIST_POP(lnode*,&frame->call_stack));
 }
 
+
 static inline void print_call_stack(struct exception_frame *frame)
 {
     if(!frame)return;
+    char buf[MAX_LOG_SIZE];
+    char *ptr = buf;
+    int32_t size = 0;
     struct lnode *node = llist_head(&frame->call_stack);
     int f = 0;
-    while(node != NULL)
+    size += snprintf(ptr,MAX_LOG_SIZE,"%s\n",exception_description(frame->exception));
+    ptr = buf+size;
+    while(node != NULL && size < MAX_LOG_SIZE)
     {
         struct callstack_frame *cf = (struct callstack_frame*)node;
-        printf("% 2d: %s",++f,cf->info);
+        size += snprintf(ptr,MAX_LOG_SIZE-size,"% 2d: %s",++f,cf->info);
+        ptr = buf+size;
         node = node->next;
     }
+    SYS_LOG(LOG_ERROR,"%s",buf);
 }
 
 #define PRINT_CALL_STACK print_call_stack(&frame)

@@ -112,11 +112,12 @@ void entry2()
         func2();
     }CATCH(except_arith)
     {
-        printf("catch:%s stack below\n",exception_description(EXPNO));
+        //printf("catch:%s stack below\n",exception_description(EXPNO));
         PRINT_CALL_STACK;
     }CATCH_ALL
     {
-        printf("catch all: %s\n",exception_description(EXPNO));
+        PRINT_CALL_STACK;
+        //printf("catch all: %s\n",exception_description(EXPNO));
     }ENDTRY;
     
     return;

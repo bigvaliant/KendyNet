@@ -44,21 +44,23 @@ void write_sys_log(const char *content);
 
 int32_t write_prefix(char *buf,uint8_t loglev);
 
+#define  MAX_LOG_SIZE 65536
+
 //日志格式[INFO|ERROR]yyyy-mm-dd-hh:mm:ss.ms:content
 #define LOG(LOGFILE,LOGLEV,...)\
             do{\
-                char buf[4096];\
-                int32_t size = write_prefix(buf,LOGLEV);\
-                snprintf(&buf[size],4096-size,__VA_ARGS__);\
-                write_log(LOGFILE,buf);\
+                char xx___buf[MAX_LOG_SIZE];\
+                int32_t size = write_prefix(xx___buf,LOGLEV);\
+                snprintf(&xx___buf[size],MAX_LOG_SIZE-size,__VA_ARGS__);\
+                write_log(LOGFILE,xx___buf);\
             }while(0)
 
 #define SYS_LOG(LOGLEV,...)\
             do{\
-                char buf[4096];\
-                int32_t size = write_prefix(buf,LOGLEV);\
-                snprintf(&buf[size],4096-size,__VA_ARGS__);\
-                write_sys_log(buf);\
+                char xx___buf[MAX_LOG_SIZE];\
+                int32_t size = write_prefix(xx___buf,LOGLEV);\
+                snprintf(&xx___buf[size],MAX_LOG_SIZE-size,__VA_ARGS__);\
+                write_sys_log(xx___buf);\
             }while(0)
 
 
