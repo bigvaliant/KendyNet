@@ -185,13 +185,12 @@ void   delete_timer(struct timer **_t)
 //更新定时器
 void update_timer(struct timer *t,uint64_t now)
 {
-	while(1){
-		struct timer_item *item = (struct timer_item*)minheap_min(t->_minheap);
+	struct timer_item *item;
+	while(NULL != (item = (struct timer_item*)minheap_min(t->_minheap))){
 		if(NULL == item->_ud){
 			minheap_popmin(t->_minheap);
 			free(item);
-		}else if(now >= item->_timeout)
-		{
+		}else if(now >= item->_timeout){
 			minheap_popmin(t->_minheap);
 			if(item->_callback(t,item,item->_ud))
 				free(item);
