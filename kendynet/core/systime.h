@@ -24,8 +24,8 @@
 #include "common.h"
 #include "thread.h"
 
-//extern pthread_key_t g_systime_key;
-//extern pthread_once_t g_systime_key_once;
+extern pthread_key_t g_systime_key;
+extern pthread_once_t g_systime_key_once;
 
 struct _clock
 {
@@ -83,9 +83,9 @@ static inline struct _clock* get_thread_clock()
 }
 
 
-/*static void systick_once_routine(){
+static void systick_once_routine(){
     pthread_key_create(&g_systime_key,NULL);
-}*/
+}
 
 static inline uint64_t GetSystemMs64()
 {

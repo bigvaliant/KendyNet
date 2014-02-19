@@ -51,7 +51,8 @@ game.a:\
 		$(CC) $(CFLAGS) -c $^ $(INCLUDE) $(DEFINE)
 		ar -rc game.a *.o
 		rm -f *.o	
-
+singleton:kendynet.a $(TESTDIR)/testsingleton.c
+	$(CC) $(CFLAGS) -o singleton $(TESTDIR)/testsingleton.c kendynet.a $(INCLUDE) $(LDFLAGS) $(DEFINE)
 testaoi:kendynet.a game.a $(TESTDIR)/testaoi.c $(TESTDIR)/testcommon.h
 	$(CC) $(CFLAGS) -o testaoi $(TESTDIR)/testaoi.c kendynet.a game.a $(INCLUDE) $(LDFLAGS) $(DEFINE) 		
 8puzzle:kendynet.a $(TESTDIR)/8puzzle.c $(TESTDIR)/testcommon.h
