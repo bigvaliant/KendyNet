@@ -4,7 +4,7 @@
 #include "thread.h"
 #include <string.h>
 
-static pthread_key_t  g_log_key;
+//static pthread_key_t  g_log_key;
 static pthread_once_t g_log_key_once = PTHREAD_ONCE_INIT;
 static msgque_t pending_log = NULL;//等待写入磁盘的日志项
 
@@ -119,7 +119,7 @@ void _write_log(logfile_t logfile,const char *content)
 }
 
 static void log_once_routine(){
-	pthread_key_create(&g_log_key,NULL);
+	//pthread_key_create(&g_log_key,NULL);
 	llist_init(&g_log_file_list);
 	sys_log = calloc(1,sizeof(*sys_log));
 	sys_log->filename = new_string(SYSLOG_NAME);

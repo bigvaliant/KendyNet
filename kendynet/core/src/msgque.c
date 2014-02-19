@@ -65,7 +65,7 @@ typedef struct heart_beat
 }*hb_t;
 
 static struct heart_beat *g_heart_beat;
-static pthread_key_t g_heart_beat_key;
+//static pthread_key_t g_heart_beat_key;
 static pthread_once_t g_heart_beat_key_once;
 
 static void* heart_beat_routine(void *arg){
@@ -89,7 +89,7 @@ static void* heart_beat_routine(void *arg){
 void heart_beat_signal_handler(int sig);
 
 static void heart_beat_once_routine(){
-	pthread_key_create(&g_heart_beat_key,NULL);
+	//pthread_key_create(&g_heart_beat_key,NULL);
 	g_heart_beat = calloc(1,sizeof(*g_heart_beat));
     dlist_init(&g_heart_beat->thread_structs);
 	g_heart_beat->mtx = mutex_create();
