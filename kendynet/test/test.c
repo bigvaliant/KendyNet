@@ -10,13 +10,13 @@ void testObj(lua_State *L)
 		return;
 	}
 	{
-		luaObject_t o = create_luaObj(L);
+		luaObject_t o = create_luaObj(L,-1);
 		CALL_OBJ_FUNC(o,"show",0);
 		SET_OBJ_FIELD(o,"type",lua_pushnumber,10);
 		CALL_OBJ_FUNC(o,"show",0);
 	}
 	{
-		luaObject_t o = create_luaObj(L);
+		luaObject_t o = create_luaObj(L,-2);
 		CALL_OBJ_FUNC(o,"show",0);
 		int type = GET_OBJ_FIELD(o,"type",int,lua_tonumber);
 		printf("%d\n",type);
@@ -60,7 +60,7 @@ int main()
 {
 	lua_State *L = luaL_newstate();
 	luaL_openlibs(L);
-	if (luaL_dofile(L,"test.lua")) {
+	if (luaL_dofile(L,"kendynet/test/test.lua")) {
 		const char * error = lua_tostring(L, -1);
 		lua_pop(L,1);
 		printf("%s\n",error);
@@ -69,7 +69,7 @@ int main()
 	testcall(L);
 	testArray(L);
 	
-	int a;	
+	/*int a;	
 	if(0 != CALL_LUA_FUNC1(L,"create_socket",1,PUSH_LUSRDATA(L,&a)))
 	{
 		const char * error = lua_tostring(L, -1);
@@ -77,6 +77,7 @@ int main()
 		printf("create_socket:%s\n",error);
 		return 0;
 	}
-	luaObject_t o = create_luaObj(L);
+	luaObject_t o = create_luaObj(L,-1);
+	*/
 	return 0;
 }

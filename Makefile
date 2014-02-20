@@ -1,9 +1,9 @@
 CFLAGS = -O2 -g -Wall 
-LDFLAGS = -lpthread -lrt -ltcmalloc -lm
+LDFLAGS = -lpthread -lrt -lm
 SHARED = -fPIC --shared
 CC = gcc
 INCLUDE = -Ikendynet -Ikendynet/core -I..\
-		  -I/usr/local/include/luajit-2.0 -Ikendynet/deps/hiredis
+		  -Ikendynet/deps/luajit-2.0/src -Ikendynet/deps/hiredis
 DEFINE = -D_DEBUG -D_LINUX -DMQ_HEART_BEAT
 TESTDIR = kendynet/test
 
@@ -88,7 +88,7 @@ atomicst:kendynet.a $(TESTDIR)/test_atomic_st.c
 testexcp:kendynet.a $(TESTDIR)/testexception.c
 	$(CC) $(CFLAGS) -o testexcp $(TESTDIR)/testexception.c kendynet.a $(INCLUDE) $(LDFLAGS)	$(DEFINE) -rdynamic -ldl
 testlua:kendynet.a 	$(TESTDIR)/test.c
-	$(CC) $(CFLAGS) -o testlua $(TESTDIR)/test.c kendynet.a $(INCLUDE) $(LDFLAGS)	$(DEFINE) -rdynamic -ldl -llua -lm
+	$(CC) $(CFLAGS) -o testlua $(TESTDIR)/test.c kendynet.a kendynet/deps/luajit-2.0/src/libluajit.a $(INCLUDE) $(LDFLAGS)	$(DEFINE) -rdynamic -ldl -lm
 testasyncall:kendynet.a $(TESTDIR)/testasyncall.c $(TESTDIR)/testcommon.h
 	$(CC) $(CFLAGS) -o testasyncall $(TESTDIR)/testasyncall.c kendynet.a kendynet/deps/hiredis/libhiredis.a  $(INCLUDE) $(LDFLAGS) $(DEFINE)
 testlog:kendynet.a $(TESTDIR)/testlog.c $(TESTDIR)/testcommon.h

@@ -150,7 +150,7 @@
 			
 #define GET_ARRAY(LUASTATE,IDX,ARRAY,POP)\
 			do{\
-				int len = luaL_len(LUASTATE,IDX);\
+				int len = lua_objlen(LUASTATE,IDX);\
 				int i = 1;\
 				for(; i <= len; ++i)\
 				{\
