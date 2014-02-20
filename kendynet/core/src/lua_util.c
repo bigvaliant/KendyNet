@@ -5,9 +5,9 @@ void luaObjcet_destroy(void *ptr)
 {
 	luaObject_t o = (luaObject_t)ptr;
 	luaL_unref(o->L,LUA_REGISTRYINDEX,o->rindex);
-	printf("o->rindex = %d\n",o->rindex);	
+//	printf("o->rindex = %d\n",o->rindex);	
 	free(ptr);
-	printf("luaObjcet_destroy\n");
+//	printf("luaObjcet_destroy\n");
 }
 
 luaObject_t create_luaObj(lua_State *L,int idx)
@@ -17,7 +17,7 @@ luaObject_t create_luaObj(lua_State *L,int idx)
 	o->L = L;
 	lua_pushvalue(L,idx);
 	o->rindex = luaL_ref(L,LUA_REGISTRYINDEX);
-	printf("o->rindex = %d\n",o->rindex);
+//	printf("o->rindex = %d\n",o->rindex);
 	if(LUA_REFNIL == o->rindex)
 	{
 		free(o);
