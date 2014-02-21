@@ -119,4 +119,11 @@ static inline void dlist_move(struct dlist *dl1,struct dlist *dl2)
 	dl1->tail.pre = dl2->tail.next;
     dlist_init(dl2);
 }
+
+#define DLIST_TAIL(DLIST) &((struct dlist*)DLIST)->tail
+
+#define DLIST_NEXT(DNODE) ((struct dnode*)DNODE)->next
+
+#define DLIST_PRE(DNODE) ((struct dnode*)DNODE)->pre   
+
 #endif

@@ -103,8 +103,8 @@ static inline void leave_me(struct map *m,struct aoi_object *me,struct aoi_objec
 
 static inline void block_process_enter(struct map *m,struct map_block *bl,struct aoi_object *o)
 {
-	struct aoi_object *cur = (struct aoi_object*)bl->aoi_objs.head.next;
-	while(cur != (struct aoi_object*)&bl->aoi_objs.tail)
+	struct aoi_object *cur = (struct aoi_object*)dlist_first(&bl->aoi_objs);
+	while(cur != (struct aoi_object*)DLIST_TAIL(&bl->aoi_objs))
 	{
 		uint64_t distance = cal_distance_2D(&o->current_pos,&cur->current_pos);
 		if(o->view_radius >= distance)
@@ -117,8 +117,8 @@ static inline void block_process_enter(struct map *m,struct map_block *bl,struct
 
 static inline void block_process_leave(struct map *m,struct map_block *bl,struct aoi_object *o,uint8_t isleave_map)
 {
-	struct aoi_object *cur = (struct aoi_object*)bl->aoi_objs.head.next;
-	while(cur != (struct aoi_object*)&bl->aoi_objs.tail)
+	struct aoi_object *cur = (struct aoi_object*)dlist_first(&bl->aoi_objs);
+	while(cur != (struct aoi_object*)DLIST_TAIL(&bl->aoi_objs))
 	{
 		if(isleave_map)
 		{		
@@ -171,8 +171,8 @@ void move_to(struct map *m,struct aoi_object *o,int32_t _x,int32_t _y)
 			{
 				//�ޱ仯����
 				struct map_block *bl = get_block(m,y,x);
-				struct aoi_object *cur = (struct aoi_object*)bl->aoi_objs.head.next;
-				while(cur != (struct aoi_object*)&bl->aoi_objs.tail)
+				struct aoi_object *cur = (struct aoi_object*)dlist_first(&bl->aoi_objs);
+				while(cur != (struct aoi_object*)DLIST_TAIL(&bl->aoi_objs))
 				{
 					uint64_t distance = cal_distance_2D(&new_pos,&cur->current_pos);
 					if(o != cur)
@@ -320,8 +320,8 @@ static inline void tick_super_object(struct map *m,struct aoi_object *o)
 			for( x=x1; x <= x2; ++x)
 			{
 				struct map_block *bl = get_block(m,y,x);
-				struct aoi_object *cur = (struct aoi_object*)bl->aoi_objs.head.next;
-				while(cur != (struct aoi_object*)&bl->aoi_objs.tail)
+				struct aoi_object *cur = (struct aoi_object*)dlist_first(&bl->aoi_objs);
+				while(cur != (struct aoi_object*)DLIST_TAIL(&bl->aoi_objs))
 				{
 					if(is_set(&o->self_view_objs,cur->aoi_object_id) == 0)
 					{
