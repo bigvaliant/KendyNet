@@ -27,8 +27,41 @@ void leave_me(struct aoi_object *me,struct aoi_object *who)
 }
 
 
+
+
 int main(){
 
+	struct point2D t_left,b_right;
+	t_left.x = 0;
+	t_left.y = 0;
+	b_right.x = 1000;
+	b_right.y = 1000;
+
+	struct map *l_map = create_map(&t_left,&b_right,enter_me,leave_me);
+
+	
+	struct player* players[1000];
+	int i = 0;
+	for(; i <50 ; ++i){
+	
+		struct player *ply = calloc(1,sizeof(*ply));
+		char buf[32];
+		snprintf(buf,32,"%d",i);	
+		ply->aoi.aoi_object_id = i;
+		ply->name = new_string(buf);
+		players[i] = ply;
+		enter_map(l_map,&ply->aoi,rand()%1000,rand()%1000);
+	}
+
+	
+	while(1){
+		for(i=0; i <50;  ++i){
+			printf("%d move\n",i);
+			move_to(l_map,&players[i]->aoi,rand()%1000,rand()%1000);
+		}
+	}
+
+/*
 	struct player *ply1 = calloc(1,sizeof(*ply1));
 	struct player *ply2 = calloc(1,sizeof(*ply2));
 	struct player *ply3 = calloc(1,sizeof(*ply3));
@@ -70,6 +103,6 @@ int main(){
 	leave_map(l_map,&ply1->aoi);
 	printf("b leave map\n");
 	leave_map(l_map,&ply2->aoi);
-
+*/
 	return 0;
 }

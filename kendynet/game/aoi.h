@@ -70,6 +70,7 @@ struct map_block
 	struct dlist aoi_objs;
 	uint32_t x;
 	uint32_t y;
+	uint32_t index;
 };
 
 struct aoi_object
