@@ -1,6 +1,6 @@
 #include "../aoi.h"
 #include "systime.h"
-
+/*
 static inline struct map_block *get_block(struct map *m,uint32_t r,uint32_t c)
 {
 	return &m->blocks[r*m->x_count+c];
@@ -266,7 +266,6 @@ int32_t leave_map(struct map *m,struct aoi_object *o)
 
 static inline void tick_super_object(struct map *m,struct aoi_object *o)
 {
-/*
 	uint32_t now = GetSystemMs();
 	if(now - o->last_update_tick >= UPDATE_INTERVAL)
 	{ 
@@ -324,7 +323,6 @@ static inline void tick_super_object(struct map *m,struct aoi_object *o)
 		}		
 		o->last_update_tick = now;	
 	}
-*/	
 }
 
 void tick_super_objects(struct map *m)
@@ -337,3 +335,4 @@ void tick_super_objects(struct map *m)
 		cur = cur->next;
 	}
 }
+*/
