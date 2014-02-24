@@ -62,7 +62,7 @@ static inline struct aoi_block *get_block_by_point(struct aoi_map *m,struct poin
 }
 
 static inline struct aoi_block **cal_blocks(struct aoi_map *m,struct aoi_block **blocks,
-										   struct point2D *pos,uint32_t radius)
+											bit_set_t block_set,struct point2D *pos,uint32_t radius)
 {
 	if(get_block_by_point(m,pos) == NULL)
 		return NULL;
@@ -82,13 +82,12 @@ static inline struct aoi_block **cal_blocks(struct aoi_map *m,struct aoi_block *
 	
 	struct aoi_block *_top_left = get_block_by_point(m,&top_left);
 	struct aoi_block *_bottom_right = get_block_by_point(m,&bottom_right);
-	bit_set_t block_set = blocks == m->new_blocks?m->new_block_set:m->old_block_set;
 	uint32_t y = _top_left->y;
 	for(; y <= _bottom_right->y; ++y){
 		uint32_t x = _top_left->x;
 		for(;x <= _bottom_right->x;++x){
 			struct aoi_block *block = BLOCK(m,x,y);
-			set_bit(block_set,block->index);
+			if(block_set) set_bit(block_set,block->index);
 			blocks[c++] = block;	
 		}			
 	}
@@ -96,8 +95,8 @@ static inline struct aoi_block **cal_blocks(struct aoi_map *m,struct aoi_block *
 	return blocks;
 }
 
-#define NEW_BLOCKS(M,POS,RADIUS) cal_blocks(M,M->new_blocks,POS,RADIUS)
-#define OLD_BLOCKS(M,POS,RADIUS) cal_blocks(M,M->old_blocks,POS,RADIUS)
+#define NEW_BLOCKS(M,POS,RADIUS) cal_blocks(M,M->new_blocks,M->new_block_set,POS,RADIUS)
+#define OLD_BLOCKS(M,POS,RADIUS) cal_blocks(M,M->old_blocks,M->old_block_set,POS,RADIUS)
 
 //计算新进入，离开，没变化的block集合
 static int8_t cal_blockset(struct aoi_map *m,struct point2D *newpos,struct point2D *oldpos,uint32_t radius)
@@ -225,6 +224,9 @@ int8_t move_to(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
 	return 0;
 }
 
+#define ENTER_BLOCKS(M,POS,RADIUS) cal_blocks(M,M->new_blocks,NULL,POS,RADIUS)
+#define LEAVE_BLOCKS(M,POS,RADIUS) cal_blocks(M,M->old_blocks,NULL,POS,RADIUS)
+
 int32_t enter_map(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
 {
 	o->pos.x = _x;
@@ -233,7 +235,7 @@ int32_t enter_map(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
 	if(!block) return -1;
 	o->aoi_object_id = get_id(m->_idmgr);
 	if(o->aoi_object_id == -1) return -1;
-	struct aoi_block **blocks = NEW_BLOCKS(m,&o->pos,m->radius);
+	struct aoi_block **blocks = ENTER_BLOCKS(m,&o->pos,m->radius);
 	uint32_t i;
 	for(i = 0; blocks[i];++i) block_process_enter(m,blocks[i],o);
 
@@ -248,7 +250,7 @@ int32_t leave_map(struct aoi_map *m,struct aoi_object *o)
 	if(!block) return -1;
 	dlist_remove(&o->block_node);
 	
-	struct aoi_block **blocks = NEW_BLOCKS(m,&o->pos,m->radius);
+	struct aoi_block **blocks = LEAVE_BLOCKS(m,&o->pos,m->radius);
 	uint32_t i;
 	for(i = 0; blocks[i];++i) block_process_leave(m,blocks[i],o);
 	//自己离开自己的视野
