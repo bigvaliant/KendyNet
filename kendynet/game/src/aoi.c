@@ -215,7 +215,7 @@ int8_t move_to(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
 		block_process_enter(m,m->enter_blocks[i],o);
 	
 	for(i = 0; m->unchange_blocks[i];++i)
-		block_process_unchange(m,m->leave_blocks[i],o);
+		block_process_unchange(m,m->unchange_blocks[i],o);
 	
 	for(i = 0; m->leave_blocks[i];++i)
 		block_process_leave(m,m->leave_blocks[i],o);

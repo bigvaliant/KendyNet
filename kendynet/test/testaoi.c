@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "game/aoi.h"
 #include "core/kn_string.h"
+#include "core/systime.h"
 
 struct player
 {
@@ -26,8 +27,16 @@ void leave_me(struct aoi_object *me,struct aoi_object *who)
 	printf("%s leave %s\n",to_cstr(l_me->name),to_cstr(l_who->name));	
 }
 
+uint8_t in_myscope(struct aoi_object *me,struct aoi_object *who){
+	uint64_t distance = cal_distance_2D(&me->pos,&who->pos);
+	if(distance <= 700)
+		return 1;
+	return 0;
+}
+
+
 static int map_size = 10000;
-static int plycount = 1000;
+static int plycount = 100;
 
 int main(){
 
@@ -37,7 +46,7 @@ int main(){
 	b_right.x = map_size;
 	b_right.y = map_size;
 
-	struct map *l_map = create_map(&t_left,&b_right,enter_me,leave_me);
+	struct aoi_map *l_map = create_map(plycount,500,700,&t_left,&b_right);
 
 	
 	struct player* players[plycount];
@@ -47,7 +56,10 @@ int main(){
 		struct player *ply = calloc(1,sizeof(*ply));
 		char buf[32];
 		snprintf(buf,32,"%d",i);	
-		ply->aoi.aoi_object_id = i;
+		ply->aoi.cb_enter = enter_me;
+		ply->aoi.cb_leave = leave_me;
+		ply->aoi.in_myscope = in_myscope;
+		ply->aoi.view_objs = new_bitset(plycount);
 		ply->name = new_string(buf);
 		players[i] = ply;
 		enter_map(l_map,&ply->aoi,rand()%map_size,rand()%map_size);
@@ -55,7 +67,13 @@ int main(){
 
 	printf("enter finish\n");	
 	while(1){
-		move_to(l_map,&players[rand()%plycount]->aoi,rand()%map_size,rand()%map_size);
+		
+		uint32_t idx = rand()%plycount;
+
+		printf("-----------------%s begin move-----------\n",to_cstr(players[idx]->name));
+		move_to(l_map,&players[idx]->aoi,rand()%map_size,rand()%map_size);
+		sleepms(10);
+		printf("-----------------%s end move-----------\n",to_cstr(players[idx]->name));
 	}
 
 /*
