@@ -42,13 +42,11 @@ struct aoi_block
 
 struct aoi_object
 {
-	struct dnode block_node;             
-	struct dnode super_node;     
+	struct dnode block_node;                  
 	struct map_block *current_block;//当前所属的管理单元	
 	int32_t aoi_object_id; 
 	bit_set_t view_objs;//在当前对象视野内的对象位图      
 	struct point2D pos;     
-	uint32_t view_radius;
 	void   *ud;
 	//使用者提供的函数，用于判断other是否在self的可视范围之内
 	uint8_t (*in_myscope)(struct aoi_object *self,struct aoi_object *other);
@@ -76,23 +74,23 @@ struct aoi_map{
 	uint32_t x_size; //横向管理单元格数量
 	uint32_t y_size; //纵向管理单元格数量
 	
-	uint32_t radius;//标准视距
-	uint32_t max_radius;//最大视距
-	
+	uint32_t radius; //标准视距
 	uint32_t max_aoi_objs;//地图中能容纳的最大aoi对象数量
 	idmgr_t  _idmgr;
 	struct aoi_block blocks[];
 };
 
-struct aoi_map *create_map(uint32_t max_aoi_objs,uint32_t _length,uint32_t radius,uint32_t max_radius,
+struct aoi_map *create_map(uint32_t max_aoi_objs,uint32_t _length,uint32_t radius,
 					   struct point2D *top_left,struct point2D *bottom_right);
 					   
 void  destroy_map(struct aoi_map*);
 
 int8_t move_to(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y);
 
-int32_t enter_map(struct aoi_map *m,struct aoi_object *o,uint32_t radius,int32_t _x,int32_t _y);
+int32_t enter_map(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y);
 
 int32_t leave_map(struct aoi_map *m,struct aoi_object *o);
+
+
 
 #endif

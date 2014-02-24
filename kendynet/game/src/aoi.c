@@ -4,15 +4,13 @@
 
 #define BLOCK(M,X,Y) (&M->blocks[Y*M->x_size+X])
 
-struct aoi_map *create_map(uint32_t max_aoi_objs,uint32_t _length,uint32_t radius,uint32_t max_radius,
+struct aoi_map *create_map(uint32_t max_aoi_objs,uint32_t _length,uint32_t radius,
 					   struct point2D *top_left,struct point2D *bottom_right)
 {
 	uint32_t length = abs(top_left->x - bottom_right->x);
 	uint32_t width = abs(top_left->y - bottom_right->y);
 	
-	if(radius > max_radius) return NULL;
 	if(radius > length || radius > width) return NULL;
-	if(max_radius > length || max_radius > width) return NULL;
 	
 	uint32_t x_size = length % _length == 0 ? length/_length : length/_length + 1;
 	uint32_t y_size = width % _length == 0 ? width/_length : width/_length + 1;
@@ -23,7 +21,6 @@ struct aoi_map *create_map(uint32_t max_aoi_objs,uint32_t _length,uint32_t radiu
 	m->x_size = x_size;
 	m->y_size = y_size;
 	m->radius = radius;
-	m->max_radius = max_radius;
 	m->max_aoi_objs = max_aoi_objs;
 	uint32_t x,y;
 	uint32_t index = 0;
@@ -38,17 +35,17 @@ struct aoi_map *create_map(uint32_t max_aoi_objs,uint32_t _length,uint32_t radiu
 		}
 	}
 	
-	//用最大视距计算一个视距最多可能覆盖多少个单元格
-	uint32_t max_radius_blocksize = max_radius%_length == 0? max_radius/_length : max_radius/_length+1;
-	max_radius_blocksize += 1;
-	max_radius_blocksize *= max_radius_blocksize;
-	m->new_block_set = new_bitset(max_radius_blocksize);
-	m->old_block_set = new_bitset(max_radius_blocksize);
-	m->new_blocks = calloc(1,sizeof(struct aoi_block*)*(max_radius_blocksize+1));
-	m->old_blocks = calloc(1,sizeof(struct aoi_block*)*(max_radius_blocksize+1));
-	m->enter_blocks = calloc(1,sizeof(struct aoi_block*)*(max_radius_blocksize+1));
-	m->unchange_blocks = calloc(1,sizeof(struct aoi_block*)*(max_radius_blocksize+1));
-	m->leave_blocks = calloc(1,sizeof(struct aoi_block*)*(max_radius_blocksize+1));
+	//计算一个视距最多可能覆盖多少个单元格
+	uint32_t radius_blocksize = radius%_length == 0? radius/_length : radius/_length+1;
+	radius_blocksize += 1;
+	radius_blocksize *= radius_blocksize;
+	m->new_block_set = new_bitset(x_size*y_size);
+	m->old_block_set = new_bitset(x_size*y_size);
+	m->new_blocks = calloc(1,sizeof(struct aoi_block*)*(radius_blocksize+1));
+	m->old_blocks = calloc(1,sizeof(struct aoi_block*)*(radius_blocksize+1));
+	m->enter_blocks = calloc(1,sizeof(struct aoi_block*)*(radius_blocksize+1));
+	m->unchange_blocks = calloc(1,sizeof(struct aoi_block*)*(radius_blocksize+1));
+	m->leave_blocks = calloc(1,sizeof(struct aoi_block*)*(radius_blocksize+1));
 	m->_idmgr = new_idmgr(0,max_aoi_objs-1);
 	return m;
 }
@@ -205,7 +202,7 @@ int8_t move_to(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
 {
 	struct point2D new_pos = {_x,_y};
 	struct point2D old_pos = o->pos;
-	if(0 != cal_blockset(m,&new_pos,&old_pos,o->view_radius)) return -1;
+	if(0 != cal_blockset(m,&new_pos,&old_pos,m->radius)) return -1;
 	
 	o->pos = new_pos;
 	struct aoi_block *old_block = get_block_by_point(m,&old_pos);
@@ -228,7 +225,7 @@ int8_t move_to(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
 	return 0;
 }
 
-int32_t enter_map(struct aoi_map *m,struct aoi_object *o,uint32_t radius,int32_t _x,int32_t _y)
+int32_t enter_map(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
 {
 	o->pos.x = _x;
 	o->pos.y = _y;
@@ -236,17 +233,12 @@ int32_t enter_map(struct aoi_map *m,struct aoi_object *o,uint32_t radius,int32_t
 	if(!block) return -1;
 	o->aoi_object_id = get_id(m->_idmgr);
 	if(o->aoi_object_id == -1) return -1;
-	if(radius > m->radius) 
-		radius = m->max_radius;
-	else
-		radius = m->radius;
-	o->view_radius = radius;
-	struct aoi_block **blocks = NEW_BLOCKS(m,&o->pos,radius);
+	struct aoi_block **blocks = NEW_BLOCKS(m,&o->pos,m->radius);
 	uint32_t i;
 	for(i = 0; blocks[i];++i) block_process_enter(m,blocks[i],o);
 
 	dlist_push(&block->aoi_objs,&o->block_node);
-	enter_me(o,o);	
+	enter_me(o,o);
 	return 0;
 }
 
@@ -256,7 +248,7 @@ int32_t leave_map(struct aoi_map *m,struct aoi_object *o)
 	if(!block) return -1;
 	dlist_remove(&o->block_node);
 	
-	struct aoi_block **blocks = NEW_BLOCKS(m,&o->pos,o->view_radius);
+	struct aoi_block **blocks = NEW_BLOCKS(m,&o->pos,m->radius);
 	uint32_t i;
 	for(i = 0; blocks[i];++i) block_process_leave(m,blocks[i],o);
 	//自己离开自己的视野
@@ -276,81 +268,3 @@ void  destroy_map(struct aoi_map *m)
 	destroy_idmgr(m->_idmgr);
 	free(m);
 }
-
-
-
-
-
-/*
-static inline void tick_super_object(struct map *m,struct aoi_object *o)
-{
-	uint32_t now = GetSystemMs();
-	if(now - o->last_update_tick >= UPDATE_INTERVAL)
-	{ 
-		//remove out of view object first
-		uint32_t i = 0;
-		for( ; i < MAX_BITS; ++i)
-		{
-			if(o->self_view_objs.bits[i] > 0)
-			{
-				uint32_t j = 0;
-				for( ; j < sizeof(uint32_t); ++j)
-				{
-					if(o->self_view_objs.bits[i] & (1 << j))
-					{
-						uint32_t aoi_object_id = i*sizeof(uint32_t) + j;
-						if(aoi_object_id != o->aoi_object_id)
-						{
-							struct aoi_object *other = m->all_aoi_objects[aoi_object_id];
-							if(other->is_leave_map)
-								leave_me(m,o,other);
-							else
-							{
-								uint64_t distance = cal_distance_2D(&o->current_pos,&other->current_pos);
-								if(distance > o->view_radius)
-									leave_me(m,o,other);
-							}
-						}
-					}
-				}
-			}
-		}
-		//process enter view
-		uint32_t x1,y1,x2,y2;
-		x1 = y1 = x2 = y2 = 0;
-		cal_blocks(m,&o->current_pos,o->view_radius,&x1,&y1,&x2,&y2);
-		uint32_t y = y1;
-		uint32_t x;
-		for( ; y <= y2; ++y)
-		{
-			for( x=x1; x <= x2; ++x)
-			{
-				struct map_block *bl = get_block(m,y,x);
-				struct aoi_object *cur = (struct aoi_object*)dlist_first(&bl->aoi_objs);
-				while(cur != (struct aoi_object*)DLIST_TAIL(&bl->aoi_objs))
-				{
-					if(is_set(&o->self_view_objs,cur->aoi_object_id) == 0)
-					{
-						uint64_t distance = cal_distance_2D(&o->current_pos,&cur->current_pos);
-						if(o->view_radius >= distance)
-							enter_me(m,o,cur);
-					}
-					cur = (struct aoi_object *)cur->block_node.next;
-				}
-			}		
-		}		
-		o->last_update_tick = now;	
-	}
-}
-
-void tick_super_objects(struct map *m)
-{
-	struct dnode *cur = m->super_aoi_objs.head.next;
-	while(cur != &m->super_aoi_objs.tail)
-	{
-		struct aoi_object *o = (struct aoi_object*)((uint8_t*)cur - sizeof(struct dnode));
-		tick_super_object(m,o);
-		cur = cur->next;
-	}
-}
-*/
