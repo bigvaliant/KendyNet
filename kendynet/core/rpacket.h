@@ -154,7 +154,7 @@ static inline double rpk_read_double(rpacket_t r)
 	rpk_read(r,(int8_t*)&value,sizeof(value));
 	return value;
 }
-
+/*
 static inline void* rpk_read_pointer(rpacket_t r)
 {
 #ifdef _X64
@@ -163,7 +163,7 @@ static inline void* rpk_read_pointer(rpacket_t r)
     return (void*)rpk_read_uint32(r);
 #endif
 }
-
+*/
 static inline uint16_t rpk_peek_uint16(rpacket_t r)
 {
     uint16_t value = 0;
@@ -246,7 +246,7 @@ static inline double reverse_read_double(rpacket_t r)
     reverse_read(r,(int8_t*)&value,sizeof(value));
     return value;
 }
-
+/*
 static inline void* reverse_read_pointer(rpacket_t r){
 #ifdef _X64
     return (void*)reverse_read_uint64(r);
@@ -254,5 +254,5 @@ static inline void* reverse_read_pointer(rpacket_t r){
     return (void*)reverse_read_uint32(r);
 #endif
 }
-
+*/
 #endif

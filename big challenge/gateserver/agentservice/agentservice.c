@@ -93,7 +93,7 @@ int32_t agent_processpacket(msgdisp_t disp,rpacket_t rpk)
 
 		}else if(cmd >= CMD_GAME2CLIENT && cmd < CMD_GAME2CLIENT_END){
 			uint16_t size = reverse_read_uint16(rpk);//这个包需要发给多少个客户端
-		    //在栈上创建一个rpacket_t用于读取需要广播的客户端
+		    //创建一个rpacket_t用于读取需要广播的客户端
 		    rpacket_t r = rpk_create_skip(rpk,size*sizeof(agentsession)+sizeof(size));
 		    //将rpk中用于广播的信息丢掉
 		    rpk_dropback(rpk,size*sizeof(agentsession)+sizeof(size));
