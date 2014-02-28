@@ -1,18 +1,50 @@
 #include "obj_allocator.h"
 #include "buffer.h"
+#include "common_define.h"
+
+
+struct obj_block
+{
+	struct dnode node;
+	struct llist freelist;
+	char   buf[0];
+};
+
+struct obj_slot
+{
+	union{
+		pthread_t       thdid;//·ÖÅäÏß³ÌµÄid
+		struct lnode node;
+	};
+	struct obj_block *block;
+	char buf[0];
+};
+
+
+struct obj_allocator{
+	struct allocator base;
+	msgque_t que;
+	uint32_t alloc_size;
+	uint32_t objsize;
+	uint32_t free_block_size;
+	struct dlist free_blocks;
+	struct dlist recy_blocks;
+	
+};
 
 static inline void __dealloc(obj_allocator_t _allo,struct obj_slot *obj)
 {
 		LLIST_PUSH_BACK(&obj->block->freelist,obj);
 		uint32_t lsize = llist_size(&obj->block->freelist);
-		if(lsize == 1){
+		if(unlikely(lsize == 1)){
 				dlist_remove((struct dnode*)obj->block);//remove from _alloc->recy_blocks
 				dlist_push(&_allo->free_blocks,(struct dnode*)obj->block);	
+				_allo->free_block_size++;
 		}
-		else if(lsize == _allo->alloc_size && _allo->free_block_size > 1)
+		else if(unlikely(lsize == _allo->alloc_size && _allo->free_block_size > 1))
 		{
 			dlist_remove((struct dnode*)obj->block);//remove from _alloc->free_blocks
-			_allo->free_block_size -= 1;
+			_allo->free_block_size--;
 			free(obj->block);
 		}
 }
@@ -23,7 +55,7 @@ static inline void* __alloc(obj_allocator_t _allo)
 	struct obj_block *b = (struct obj_block*)dlist_first(&_allo->free_blocks);
 	struct obj_slot *obj = LLIST_POP(struct obj_slot*,&b->freelist);
 	obj->block = b;
-	if(llist_is_empty(&b->freelist))
+	if(unlikely(llist_is_empty(&b->freelist)))
 	{
 		//remove from _alloc->free_blocks and push to _alloc->recy_blocks
 		dlist_remove((struct dnode*)b);
@@ -52,7 +84,7 @@ static inline void __expand(obj_allocator_t _allo)
 void* obj_alloc(struct allocator *allo,int32_t size)
 {
 	obj_allocator_t _allo = (obj_allocator_t)allo;
-	if(dlist_empty(&_allo->free_blocks))
+	if(unlikely(dlist_empty(&_allo->free_blocks)))
 	{
 		struct lnode *n;
 		do{
@@ -66,7 +98,7 @@ void* obj_alloc(struct allocator *allo,int32_t size)
 	}else
 		return __alloc(_allo);
 
-	if(dlist_empty(&_allo->free_blocks))
+	if(unlikely(dlist_empty(&_allo->free_blocks)))
 		__expand(_allo);
 	return __alloc(_allo);
 }

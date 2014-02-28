@@ -64,8 +64,8 @@ int main(int argc,char **argv)
     InitNetSystem();
 
     //共用网络层，两个线程各运行一个echo服务
-    wpacket_allocator = new_obj_allocator(sizeof(struct wpacket),1024);
-    rpacket_allocator = new_obj_allocator(sizeof(struct rpacket),1024);
+    wpacket_allocator = new_obj_allocator(sizeof(struct wpacket),8192);
+    rpacket_allocator = new_obj_allocator(sizeof(struct rpacket),8192);
     asynnet_t asynet = asynnet_new(2);
     msgdisp_t  disp1 = new_msgdisp(asynet,5,
                                    CB_CONNECT(asynconnect),
