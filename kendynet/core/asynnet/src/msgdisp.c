@@ -101,7 +101,7 @@ msgdisp_t  new_msgdisp(asynnet_t asynet,uint8_t cbsize,...)
 {
     msgdisp_t disp = calloc(1,sizeof(*disp));
     disp->asynet = asynet;
-    disp->mq = new_msgque(64,msg_destroyer);
+    disp->mq = new_msgque(32,msg_destroyer);
     void *asyncb[TYPE_SIZE] = {NULL};
     if(cbsize){
         va_list argptr;

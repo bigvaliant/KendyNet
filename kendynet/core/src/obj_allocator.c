@@ -29,7 +29,8 @@ static inline void* __alloc(obj_allocator_t _allo)
 		dlist_remove((struct dnode*)b);
 		dlist_push(&_allo->recy_blocks,(struct dnode*)b);	
 	}
-	return (void*)b->buf;
+	memset(obj->buf,0,_allo->objsize-sizeof(struct obj_slot));
+	return (void*)obj->buf;
 
 }
 
@@ -42,7 +43,7 @@ static inline void __expand(obj_allocator_t _allo)
 	for(; i < _allo->alloc_size;++i)
 	{
 		struct obj_slot *o = (struct obj_slot*)&b->buf[i*_allo->objsize];
-		LLIST_PUSH_BACK(&o->block->freelist,o);
+		LLIST_PUSH_BACK(&b->freelist,o);
 	}
 	dlist_push(&_allo->free_blocks,(struct dnode*)b);	
 	++_allo->free_block_size;
@@ -56,7 +57,11 @@ void* obj_alloc(struct allocator *allo,int32_t size)
 		struct lnode *n;
 		do{
 			msgque_get(_allo->que,&n,0);
-		}while(n != NULL);
+			if(NULL != n)
+				__dealloc(_allo,(struct obj_slot*)n);
+			else
+				break;
+		}while(1);
 				
 	}else
 		return __alloc(_allo);
@@ -75,7 +80,10 @@ void obj_dealloc(struct allocator *allo ,void *ptr)
 	if(obj->thdid == pthread_self())
 		__dealloc(_allo,obj);
 	else
+	{
+		obj->node.next = NULL;
 		msgque_put(_allo->que,(struct lnode*)obj);
+	}
 }
 	
 allocator_t new_obj_allocator(uint32_t objsize,uint32_t initsize)
@@ -89,10 +97,9 @@ allocator_t new_obj_allocator(uint32_t objsize,uint32_t initsize)
 	allo->que = new_msgque(64,NULL);
 	allo->alloc_size = initsize;
 	allo->objsize = objsize;
-	__expand(allo);
-
 	dlist_init(&allo->recy_blocks);
 	dlist_init(&allo->free_blocks);
+	__expand(allo);
 	((allocator_t)allo)->_alloc = obj_alloc;
 	((allocator_t)allo)->_dealloc = obj_dealloc;
 	((allocator_t)allo)->_destroy = NULL;
