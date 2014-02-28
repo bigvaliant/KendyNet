@@ -4,7 +4,7 @@ SHARED = -fPIC --shared
 CC = gcc
 INCLUDE = -Ikendynet -Ikendynet/core -I..\
 		  -Ikendynet/deps/luajit-2.0/src -Ikendynet/deps/hiredis
-DEFINE = -D_DEBUG -D_LINUX -DMQ_HEART_BEAT
+DEFINE = -D_DEBUG -D_LINUX -DMQ_HEART_BEAT -D_X64
 TESTDIR = kendynet/test
 
 kendynet.a: \
@@ -33,6 +33,7 @@ kendynet.a: \
 		   kendynet/core/asynnet/src/asyncall.c \
 		   kendynet/core/src/atomic_st.c \
 		   kendynet/core/src/tls.c \
+		   kendynet/core/src/obj_allocator.c \
 		   kendynet/core/src/lua_util.c\
 		   kendynet/core/db/src/asynredis.c\
 		   kendynet/core/db/src/asyndb.c\
