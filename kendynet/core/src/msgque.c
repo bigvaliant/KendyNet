@@ -21,6 +21,7 @@ struct msg_que
         struct dlist        blocks;
         struct dlist        can_interrupt;
         item_destroyer      destroy_function;
+		uint8_t             enable_auto_flush;
 };
 
 
@@ -230,7 +231,7 @@ void default_item_destroyer(void* item){
 	free(item);
 }
 
-struct msg_que* new_msgque(uint32_t syn_size,item_destroyer destroyer)
+struct msg_que* new_msgque(uint32_t syn_size,item_destroyer destroyer,uint8_t enable_auto_flush)
 {
 	pthread_once(&g_msg_que_key_once,msg_que_once_routine);
 	struct msg_que *que = calloc(1,sizeof(*que));
@@ -242,6 +243,7 @@ struct msg_que* new_msgque(uint32_t syn_size,item_destroyer destroyer)
     dlist_init(&que->can_interrupt);
 	que->syn_size = syn_size;
 	que->destroy_function = destroyer;
+	que->enable_auto_flush = enable_auto_flush;
 	get_per_thread_que(que,MSGQ_NONE);
 	return que;
 }
@@ -340,7 +342,8 @@ static inline int8_t _put(msgque_t que,lnode *msg,uint8_t type)
 	{
 		ptq->write_que.flag = 1;
 		pts_t pts = get_per_thread_struct();
-        dlist_push(&pts->per_thread_que,&ptq->write_que.pnode);
+		if(que->enable_auto_flush)
+			dlist_push(&pts->per_thread_que,&ptq->write_que.pnode);
         if(msg)LLIST_PUSH_BACK(&ptq->local_que,msg);
 
 		if(type == 1)

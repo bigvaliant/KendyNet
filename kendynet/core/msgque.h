@@ -61,7 +61,7 @@ typedef struct msg_que* msgque_t;
 void default_item_destroyer(void* item);
 
 
-struct msg_que* new_msgque(uint32_t syn_size,item_destroyer);
+struct msg_que* new_msgque(uint32_t syn_size,item_destroyer,uint8_t enable_auto_flush);
 
 /* push一条消息到local队列,如果local队列中的消息数量超过阀值执行同步，否则不同步
 *  返回非0表示出错

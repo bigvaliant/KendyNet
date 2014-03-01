@@ -39,7 +39,7 @@ struct obj_allocator{
 static struct pth_allocator* new_pth(obj_allocator_t allo)
 {
 	struct pth_allocator *pth = calloc(1,sizeof(*pth));
-	pth->que = new_msgque(64,NULL);
+	pth->que = new_msgque(64,NULL,0);
 	dlist_init(&pth->recy_blocks);
 	dlist_init(&pth->free_blocks);
 	return pth;
@@ -99,14 +99,14 @@ static inline void __expand(obj_allocator_t _allo,struct pth_allocator *pth)
 void* obj_alloc(struct allocator *allo,int32_t size)
 {
 	obj_allocator_t _allo = (obj_allocator_t)allo;
-	//struct pth_allocator *pth = (struct pth_allocator*)pthread_getspecific(_allo->pkey);
-	struct pth_allocator *pth = (struct pth_allocator*)tls_get(_allo->tls_type);
+	struct pth_allocator *pth = (struct pth_allocator*)pthread_getspecific(_allo->pkey);
+	//struct pth_allocator *pth = (struct pth_allocator*)tls_get(_allo->tls_type);
 	if(!pth)
 	{
 		pth = new_pth(_allo);
-		tls_set(_allo->tls_type,pth,NULL);
+		//tls_set(_allo->tls_type,pth,NULL);
 
-		//pthread_setspecific(_allo->pkey,pth);
+		pthread_setspecific(_allo->pkey,pth);
 		
 	}
 	if(unlikely(dlist_empty(&pth->free_blocks)))
@@ -136,8 +136,8 @@ void obj_dealloc(struct allocator *allo ,void *ptr)
 	struct obj_slot *obj = (struct obj_slot*)((char*)ptr - sizeof(struct obj_slot));	
 	if(obj->block->thdid == pthread_self()){
 
-	//struct pth_allocator *pth = (struct pth_allocator*)pthread_getspecific(_allo->pkey);;
-		struct pth_allocator *pth = (struct pth_allocator*)tls_get(_allo->tls_type);
+	struct pth_allocator *pth = (struct pth_allocator*)pthread_getspecific(_allo->pkey);;
+	//	struct pth_allocator *pth = (struct pth_allocator*)tls_get(_allo->tls_type);
 		if(!pth)
 			abort();
 		__dealloc(_allo,pth,obj);
@@ -149,7 +149,7 @@ void obj_dealloc(struct allocator *allo ,void *ptr)
 	}
 }
 	
-allocator_t new_obj_allocator(uint16_t tls_type,uint32_t objsize,uint32_t initsize)
+allocator_t new_obj_allocator(uint32_t objsize,uint32_t initsize)
 {
 	obj_allocator_t allo = calloc(1,sizeof(*allo));
 	objsize += sizeof(struct obj_slot);
@@ -159,9 +159,8 @@ allocator_t new_obj_allocator(uint16_t tls_type,uint32_t objsize,uint32_t initsi
 	if(initsize < 1024) initsize = 1024;
 	allo->alloc_size = initsize;
 	allo->objsize = objsize;
-	allo->tls_type = tls_type;
-    //pthread_key_create(&allo->pkey,NULL);
-	//tls_create(tls_type,NULL);
+	//allo->tls_type = tls_type;
+    pthread_key_create(&allo->pkey,NULL);
 	((allocator_t)allo)->_alloc = obj_alloc;
 	((allocator_t)allo)->_dealloc = obj_dealloc;
 	((allocator_t)allo)->_destroy = NULL;

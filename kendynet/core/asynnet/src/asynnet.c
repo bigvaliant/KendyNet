@@ -226,7 +226,7 @@ asynnet_t asynnet_new(uint8_t  pollercount)
 	for(; i < pollercount;++i)
 	{
         asynet->netpollers[i].poller_thd = create_thread(THREAD_JOINABLE);
-        asynet->netpollers[i].mq_in = new_msgque(32,msg_destroyer);
+        asynet->netpollers[i].mq_in = new_msgque(32,msg_destroyer,1);
         asynet->netpollers[i].netpoller = new_service();
         thread_start_run(asynet->netpollers[i].poller_thd,mainloop,(void*)&asynet->netpollers[i]);
 	}

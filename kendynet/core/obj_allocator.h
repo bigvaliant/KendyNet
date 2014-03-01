@@ -22,11 +22,11 @@
 #include "msgque.h"
 #include "llist.h"
 #include "dlist.h"
-#include "tls.h"
+//#include "tls.h"
 
 struct obj_allocator;
 typedef struct obj_allocator *obj_allocator_t;
 
-allocator_t new_obj_allocator(uint16_t tls_type,uint32_t objsize,uint32_t initsize);
+allocator_t new_obj_allocator(uint32_t objsize,uint32_t initsize);
 
 #endif
