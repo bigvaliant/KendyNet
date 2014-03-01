@@ -2,11 +2,13 @@
 #include "buffer.h"
 #include "common_define.h"
 #include "log.h"
+#include "lockfree.h"
 struct obj_block
 {
 	struct dnode node;
 	struct llist freelist;
-	msgque_t que;
+	//msgque_t que;
+	lockfree_stack_t que;
 	pthread_t       thdid;//·ÖÅäÏß³ÌµÄid
 	char   buf[0];
 };
@@ -21,7 +23,7 @@ struct obj_slot
 
 struct pth_allocator
 {
-	msgque_t que;
+	lockfree_stack que;
 	uint32_t free_block_size;
 	struct dlist free_blocks;
 	struct dlist recy_blocks;
@@ -39,7 +41,7 @@ struct obj_allocator{
 static struct pth_allocator* new_pth(obj_allocator_t allo)
 {
 	struct pth_allocator *pth = calloc(1,sizeof(*pth));
-	pth->que = new_msgque(64,NULL,0);
+	//pth->que = new_msgque(64,NULL,0);
 	dlist_init(&pth->recy_blocks);
 	dlist_init(&pth->free_blocks);
 	return pth;
@@ -81,7 +83,7 @@ static inline void __expand(obj_allocator_t _allo,struct pth_allocator *pth)
 {
 
 	struct obj_block *b = calloc(1,sizeof(*b)+_allo->alloc_size*_allo->objsize);
-	b->que = pth->que;
+	b->que = &pth->que;
 	b->thdid = pthread_self();
 	llist_init(&b->freelist);
 	uint32_t i = 0;
@@ -112,13 +114,17 @@ void* obj_alloc(struct allocator *allo,int32_t size)
 	if(unlikely(dlist_empty(&pth->free_blocks)))
 	{
 		struct lnode *n;
+		while((n = lfstack_pop(&pth->que)) != NULL)
+			__dealloc(_allo,pth,(struct obj_slot*)n);
+		
+		/*struct lnode *n;
 		do{
 			msgque_get(pth->que,&n,0);
 			if(NULL != n)
 				__dealloc(_allo,pth,(struct obj_slot*)n);
 			else
 				break;
-		}while(1);
+		}while(1);*/
 				
 	}else
 		return __alloc(_allo,pth);
@@ -144,8 +150,9 @@ void obj_dealloc(struct allocator *allo ,void *ptr)
 	}
 	else
 	{
-		obj->node.next = NULL;
-		msgque_put(obj->block->que,(struct lnode*)obj);
+		lfstack_push(obj->block->que,(struct lnode*)obj);
+		//obj->node.next = NULL;
+		//msgque_put(obj->block->que,(struct lnode*)obj);
 	}
 }
 	
