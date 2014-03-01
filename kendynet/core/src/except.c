@@ -133,7 +133,25 @@ void exception_throw(int32_t code,const char *file,const char *func,int32_t line
     }
 	else
 	{
-		printf("unsolved exception %d,file:%s line:%d\n",code,file,line);
+        void *bt[20];
+        char **strings;
+        size_t sz;
+        int i;
+        sz = backtrace(bt, 20);
+        strings = backtrace_symbols(bt, sz);
+		for(i = 0; i < sz; ++i){
+            if(strstr(strings[i],"exception_throw+")){
+                if(code == except_segv_fault ||
+                   code == except_sigbus     ||
+                   code == except_arith) i+=2;
+                continue;
+            }
+		   printf("%s\n",strings[i]);
+            if(strstr(strings[i],"main+"))
+                break;
+        }
+        free(strings);
+		exit(0);
 	}
 }
 
