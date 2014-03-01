@@ -101,7 +101,7 @@ void* obj_alloc(struct allocator *allo,int32_t size)
 	obj_allocator_t _allo = (obj_allocator_t)allo;
 	struct pth_allocator *pth = (struct pth_allocator*)pthread_getspecific(_allo->pkey);
 	//struct pth_allocator *pth = (struct pth_allocator*)tls_get(_allo->tls_type);
-	if(!pth)
+	if(unlikely(!pth))
 	{
 		pth = new_pth(_allo);
 		//tls_set(_allo->tls_type,pth,NULL);
@@ -136,9 +136,9 @@ void obj_dealloc(struct allocator *allo ,void *ptr)
 	struct obj_slot *obj = (struct obj_slot*)((char*)ptr - sizeof(struct obj_slot));	
 	if(obj->block->thdid == pthread_self()){
 
-	struct pth_allocator *pth = (struct pth_allocator*)pthread_getspecific(_allo->pkey);;
-	//	struct pth_allocator *pth = (struct pth_allocator*)tls_get(_allo->tls_type);
-		if(!pth)
+		struct pth_allocator *pth = (struct pth_allocator*)pthread_getspecific(_allo->pkey);;
+		//	struct pth_allocator *pth = (struct pth_allocator*)tls_get(_allo->tls_type);
+		if(unlikely(!pth))
 			abort();
 		__dealloc(_allo,pth,obj);
 	}
