@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include "common_define.h"
 
-struct tls_st
+/*struct tls_st
 {
     void *tls_val;
     TLS_DESTROY_FN destroy_fn;
@@ -26,7 +26,7 @@ static void tls_destroy_fn(void *ud)
 static void tls_once_routine(){
     pthread_key_create(&g_tls_key,tls_destroy_fn);
 }
-
+*/
 
 /*int32_t tls_create(uint16_t key,TLS_DESTROY_FN fn)
 {
@@ -37,24 +37,28 @@ static void tls_once_routine(){
     return 0;
 }*/
 
+static __thread void* all_tls[MAX_TLS_SIZE];
+
 
 void* tls_get(uint16_t key)
 {
     if(unlikely(key >= MAX_TLS_SIZE)) return NULL;
-    pthread_once(&g_tls_key_once,tls_once_routine);
+    return all_tls[key];
+    /*pthread_once(&g_tls_key_once,tls_once_routine);
     struct tls_st *thd_tls = (struct tls_st *)pthread_getspecific(g_tls_key);
     if(unlikely(!thd_tls)){ 
 		thd_tls = calloc(1,sizeof(struct tls_st)*MAX_TLS_SIZE);
 		pthread_setspecific(g_tls_key,thd_tls);
 		return NULL;
 	}
-    return thd_tls[key].tls_val;
+    return thd_tls[key].tls_val;*/
 }
 
-int32_t  tls_set(uint16_t key,void *ud,TLS_DESTROY_FN fn)
+int32_t  tls_set(uint16_t key,void *ud/*,TLS_DESTROY_FN fn*/)
 {
     if(unlikely(key >= MAX_TLS_SIZE)) return -1;
-    pthread_once(&g_tls_key_once,tls_once_routine);
+    all_tls[key] = ud;
+    /*pthread_once(&g_tls_key_once,tls_once_routine);
     struct tls_st *thd_tls = (struct tls_st *)pthread_getspecific(g_tls_key);
     if(unlikely(!thd_tls)){ 
 		thd_tls = calloc(1,sizeof(struct tls_st)*MAX_TLS_SIZE);
@@ -64,6 +68,7 @@ int32_t  tls_set(uint16_t key,void *ud,TLS_DESTROY_FN fn)
 		thd_tls[key].destroy_fn(thd_tls[key].tls_val);
 	thd_tls[key].tls_val = ud;
 	thd_tls[key].destroy_fn = fn;
+	*/
 	return 0;	
 }
 
