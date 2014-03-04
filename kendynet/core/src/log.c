@@ -127,7 +127,7 @@ static void log_once_routine(){
 	mutex_lock(g_mtx_log_file_list);
 	LLIST_PUSH_BACK(&g_log_file_list,sys_log);
 	mutex_unlock(g_mtx_log_file_list);
-	pending_log = new_msgque(64,default_item_destroyer,1);
+	pending_log = new_msgque(64,default_item_destroyer);
 	g_log_thd = create_thread(THREAD_JOINABLE);
 	thread_start_run(g_log_thd,log_routine,NULL);
 	atexit(on_process_end);

@@ -35,7 +35,7 @@ asyndb_t new_asyndb()
 	struct asynredis *redis = calloc(1,sizeof(*redis));
 	llist_init(&redis->workers);
 	redis->mtx = mutex_create();
-	redis->mq =  new_msgque(32,request_destroyer,1);
+	redis->mq =  new_msgque(32,request_destroyer);
 	redis->base.connectdb = redis_connectdb;
 	redis->base.request = redis_request;
 	return (asyndb_t)redis;

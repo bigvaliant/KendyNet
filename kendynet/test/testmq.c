@@ -6,14 +6,13 @@
 #include "core/systime.h"
 #include "core/msgque.h"
 
-list_node *node_list1[5];
-list_node *node_list2[5];
-list_node *node_list3[5];
+lnode *node_list1[5];
+lnode *node_list2[5];
+lnode *node_list3[5];
 msgque_t mq1;
 
 void *Routine1(void *arg)
 {
-	msgque_open_write(mq1);
     for(;;){
         int j = 0;
         for(; j < 5;++j)
@@ -23,7 +22,6 @@ void *Routine1(void *arg)
             {
                 msgque_put(mq1,&node_list1[j][i]);
             }
-            msgque_flush();
             sleepms(200);
         }
     }
@@ -33,7 +31,6 @@ void *Routine1(void *arg)
 
 void *Routine2(void *arg)
 {
-	msgque_open_write(mq1);
     for(;;){
         int j = 0;
         for(; j < 5;++j)
@@ -43,7 +40,6 @@ void *Routine2(void *arg)
             {
                 msgque_put(mq1,&node_list2[j][i]);
             }
-            msgque_flush();
             sleepms(200);
         }
     }
@@ -53,7 +49,6 @@ void *Routine2(void *arg)
 
 void *Routine3(void *arg)
 {
-	msgque_open_write(mq1);
 	for(;;){
 		int j = 0;
 		for(; j < 5;++j)
@@ -63,7 +58,6 @@ void *Routine3(void *arg)
 			{
 				msgque_put(mq1,&node_list3[j][i]);
 			}
-			msgque_flush();
 			sleepms(200);
 		}
 	}
@@ -73,13 +67,12 @@ void *Routine3(void *arg)
 
 void *Routine4(void *arg)
 {
-	msgque_open_read(mq1);
 	uint64_t count = 0;
 	uint64_t total_count = 0;
 	uint32_t tick = GetSystemMs();
 	for( ; ; )
 	{
-		list_node *n;
+		lnode *n;
 		if(0 != msgque_get(mq1,&n,50))
             break;
 		if(n)
@@ -101,26 +94,26 @@ void *Routine4(void *arg)
 
 int main()
 {
-	/*int i = 0;
+	int i = 0;
 	for( ; i < 5; ++i)
 	{
-		node_list1[i] = calloc(10000000,sizeof(list_node));
-		node_list2[i] = calloc(10000000,sizeof(list_node));
-		node_list3[i] = calloc(10000000,sizeof(list_node));
-	}*/
-	mq1 = new_msgque(1024,NULL);
-    //thread_t t4 = create_thread(0);
-    //thread_start_run(t4,Routine4,NULL);
-	
-    /*thread_t t1 = create_thread(0);
+		node_list1[i] = calloc(10000000,sizeof(lnode));
+		node_list2[i] = calloc(10000000,sizeof(lnode));
+		node_list3[i] = calloc(10000000,sizeof(lnode));
+	}
+	mq1 = new_msgque(64,NULL);
+	thread_t t4 = create_thread(0);
+	thread_start_run(t4,Routine4,NULL);
+
+	thread_t t1 = create_thread(0);
 	thread_start_run(t1,Routine1,NULL);
 
-    thread_t t2 = create_thread(0);
-    thread_start_run(t2,Routine2,NULL);
+	//thread_t t2 = create_thread(0);
+	//thread_start_run(t2,Routine2,NULL);
 
-	thread_t t3 = create_thread(0);
-	thread_start_run(t3,Routine3,NULL);
-	*/
+	//thread_t t3 = create_thread(0);
+	//thread_start_run(t3,Routine3,NULL);
+
 	getchar();
 	return 0;
 }
