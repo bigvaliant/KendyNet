@@ -25,7 +25,7 @@ void *Routine1(void *arg)
 				//lfstack_push(&mq1,&node_list1[j][i]);
                 msgque_put(mq1,&node_list1[j][i]);
             }
-            //sleepms(200);
+            sleepms(200);
         }
     }
     printf("Routine1 end\n");
@@ -44,7 +44,7 @@ void *Routine2(void *arg)
 				//lfstack_push(&mq1,&node_list2[j][i]);
                 msgque_put(mq1,&node_list2[j][i]);
             }
-            //sleepms(200);
+            sleepms(200);
         }
     }
     printf("Routine2 end\n");
@@ -106,7 +106,7 @@ int main()
 		node_list2[i] = calloc(10000000,sizeof(lnode));
 		node_list3[i] = calloc(10000000,sizeof(lnode));
 	}
-	mq1 = new_msgque(1024,NULL);
+	mq1 = new_msgque(64,NULL);
 	//mq1.head = NULL;
 	thread_t t4 = create_thread(0);
 	thread_start_run(t4,Routine4,NULL);

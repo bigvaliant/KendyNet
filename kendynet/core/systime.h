@@ -118,20 +118,13 @@ static inline time_t GetSystemSec()
 	return time(NULL);
 }
 
-#ifdef MQ_HEART_BEAT
-void   block_sigusr1();
-void   unblock_sigusr1();
-#endif
-
 static inline void sleepms(uint32_t ms)
 {
-#ifdef MQ_HEART_BEAT
-	block_sigusr1();
-	usleep(ms*1000);
-	unblock_sigusr1();
-#else
-    usleep(ms*1000);
-#endif
+	uint64_t endtick = GetSystemMs64()+ms;
+	do{
+		uint64_t _ms = endtick - GetSystemMs64();
+		usleep(_ms*1000);
+	}while(GetSystemMs64() < endtick);
 }
 
 static inline char *GetCurrentTimeStr(char *buf)

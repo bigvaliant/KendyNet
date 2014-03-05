@@ -90,9 +90,9 @@ void   msgque_removeinterrupt(msgque_t);
 //冲刷本线程持有的所有消息队列的local push队列
 void   msgque_flush();
 
-#ifdef MQ_HEART_BEAT
-void   block_sigusr1();
-void   unblock_sigusr1();
-#endif
+//#ifdef MQ_HEART_BEAT
+//void   block_sigusr1();
+//void   unblock_sigusr1();
+//#endif
 
 #endif

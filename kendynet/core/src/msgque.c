@@ -65,7 +65,6 @@ typedef struct heart_beat
 }*hb_t;
 
 static struct heart_beat *g_heart_beat;
-//static pthread_key_t g_heart_beat_key;
 static pthread_once_t g_heart_beat_key_once;
 
 static void* heart_beat_routine(void *arg){
@@ -76,7 +75,7 @@ static void* heart_beat_routine(void *arg){
 			while(dn != &g_heart_beat->thread_structs.tail)
 			{
 				pts_t pts =(pts_t)dn;
-				pthread_kill(pts->thread_id,SIGUSR1);
+				pthread_kill(pts->thread_id,SIGALRM);//SIGUSR1);
 				dn = dn->next;
 			}
 		}
@@ -89,7 +88,6 @@ static void* heart_beat_routine(void *arg){
 void heart_beat_signal_handler(int sig);
 
 static void heart_beat_once_routine(){
-	//pthread_key_create(&g_heart_beat_key,NULL);
 	g_heart_beat = calloc(1,sizeof(*g_heart_beat));
 	dlist_init(&g_heart_beat->thread_structs);
 	g_heart_beat->mtx = mutex_create();
@@ -99,8 +97,8 @@ static void heart_beat_once_routine(){
 	sigusr1.sa_flags = 0;
 	sigusr1.sa_handler = heart_beat_signal_handler;
 	sigemptyset(&sigusr1.sa_mask);
-	sigaddset(&sigusr1.sa_mask,SIGUSR1);
-	int status = sigaction(SIGUSR1,&sigusr1,NULL);
+	sigaddset(&sigusr1.sa_mask,SIGALRM);//SIGUSR1);
+	int status = sigaction(/*SIGUSR1*/SIGALRM,&sigusr1,NULL);
 	if(status == -1)
 	{
 		printf("error sigaction\n");
@@ -152,11 +150,27 @@ static inline pts_t get_per_thread_struct()
 	}
 	return pts;
 }
+#ifdef MQ_HEART_BEAT
+static inline void block_alarm()
+{
+	sigset_t mask;
+	sigemptyset(&mask);
+	sigaddset(&mask,SIGALRM);
+	pthread_sigmask(SIG_BLOCK,&mask,NULL);
+}
 
+static inline void   unblock_alarm()
+{
+	sigset_t mask;
+	sigemptyset(&mask);
+	sigaddset(&mask,SIGALRM);
+	pthread_sigmask(SIG_UNBLOCK,&mask,NULL);
+}
+#endif
 void delete_per_thread_struct(void *arg)
 {
 #ifdef MQ_HEART_BEAT
-	block_sigusr1();
+	block_alarm();
 	pthread_setspecific(g_msg_que_key,NULL);
 	pts_t pts = (pts_t)arg;
 	//从heart_beat中移除
@@ -165,7 +179,7 @@ void delete_per_thread_struct(void *arg)
 	dlist_remove(&pts->hnode);
 	mutex_unlock(hb->mtx);
 	free(pts);
-	unblock_sigusr1();
+	unblock_alarm();
 #else
 	pthread_setspecific(g_msg_que_key,NULL);
 	free(arg);
@@ -195,7 +209,7 @@ static inline ptq_t get_per_thread_que(struct msg_que *que,uint8_t mode)
 void delete_per_thread_que(void *arg)
 {
 #ifdef MQ_HEART_BEAT
-	block_sigusr1();
+	block_alarm();
 #endif
 	ptq_t ptq = (ptq_t)arg;
 	if(ptq->mode == MSGQ_WRITE){
@@ -211,7 +225,7 @@ void delete_per_thread_que(void *arg)
 	ref_decrease(&ptq->que->refbase);
 	free(ptq);
 #ifdef MQ_HEART_BEAT
-	unblock_sigusr1();
+	unblock_alarm();
 #endif
 	printf("delete_per_thread_que\n");
 }
@@ -316,13 +330,6 @@ static inline void msgque_sync_pop(ptq_t ptq,int32_t timeout)
 			}while(llist_is_empty(&que->share_que));
 		}
 	}
-	/*else if(llist_is_empty(&que->share_que))
-	  {
-	  dlist_push(&que->blocks,&ptq->read_que.bnode);
-	  do{	
-	  condition_wait(ptq->cond,que->mtx);
-	  }while(llist_is_empty(&que->share_que));
-	  }*/
 	if(!llist_is_empty(&que->share_que))
 		llist_swap(&ptq->local_que,&que->share_que);
 	mutex_unlock(que->mtx);
@@ -357,10 +364,10 @@ static inline int8_t _put(msgque_t que,lnode *msg,uint8_t type)
 
 static inline int8_t _push1(msgque_t que,lnode *msg)
 {
+	//对于syn_size == 1的队列，不需要先push到localque,直接push到shareque
 	if(!msg)return 0;
 	mutex_lock(que->mtx);
 	uint8_t empty = llist_is_empty(&que->share_que);
-	//llist_swap(&que->share_que,&ptq->local_que);
 	LLIST_PUSH_BACK(&que->share_que,msg);
 	if(empty){
 		struct dnode *l = dlist_pop(&que->blocks);
@@ -409,17 +416,6 @@ int8_t msgque_get(msgque_t que,lnode **msg,int32_t timeout)
 	return 0;
 }
 
-/*int32_t msgque_len(msgque_t que,int32_t timeout)
-  {
-  ptq_t ptq = get_per_thread_que(que,MSGQ_READ);
-  assert(ptq->mode == MSGQ_READ);
-  if(ptq->mode != MSGQ_READ)return -1;
-  if(!llist_is_empty(&ptq->local_que))
-  timeout = 0;
-  msgque_sync_pop(ptq,timeout);
-  return llist_size(&ptq->local_que);
-  }*/
-
 static inline void _flush_local(ptq_t ptq)
 {
 	assert(ptq->mode == MSGQ_WRITE);
@@ -444,7 +440,6 @@ void msgque_flush()
 #ifdef MQ_HEART_BEAT
 void heart_beat_signal_handler(int sig)
 {
-	//block_sigusr1();
 	pts_t pts = (pts_t)pthread_getspecific(g_msg_que_key);
 	if(pts){
 		struct dnode *dln = dlist_first(&pts->per_thread_que);
@@ -458,22 +453,6 @@ void heart_beat_signal_handler(int sig)
 			dln = dln->next;
 		}
 	}
-	//unblock_sigusr1();
 }
 
-void   block_sigusr1()
-{
-	sigset_t mask;
-	sigemptyset(&mask);
-	sigaddset(&mask,SIGUSR1);
-	pthread_sigmask(SIG_BLOCK,&mask,NULL);
-}
-
-void   unblock_sigusr1()
-{
-	sigset_t mask;
-	sigemptyset(&mask);
-	sigaddset(&mask,SIGUSR1);
-	pthread_sigmask(SIG_UNBLOCK,&mask,NULL);
-}
 #endif
