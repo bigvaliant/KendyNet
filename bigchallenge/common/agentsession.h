@@ -1,8 +1,8 @@
 #ifndef _AGENTSESSION_H
 #define _AGENTSESSION_H
 #include <stdint.h>
-#include "core/asynnet.h"
-#include "core/cstring.h"
+#include "core/asynnet/asynnet.h"
+#include "core/kn_string.h"
 
 typedef struct agentsession{
 	union{
@@ -21,7 +21,7 @@ typedef struct avatid{
 			uint32_t type:1;     //类型码0玩家,1怪物
 			uint32_t identity:15;//递增值，只对玩家有效
 			uint32_t index:16;   //最大8191*8=65528,0为非法值
-		}
+		};
 		uint32_t data;
 	};
 }avatid;

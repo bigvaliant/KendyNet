@@ -1,10 +1,10 @@
 #ifndef _AGENTSERVICE_H
 #define _AGENTSERVICE_H
 
-#include "../../agentsession.h"
-#include "core/msgdisp.h"
+#include "common/agentsession.h"
+#include "core/asynnet/msgdisp.h"
 #include "core/thread.h"
-#include "../../idmgr.h"
+#include "core/idmgr.h"
 
 #define MAX_ANGETPLAYER   8191
 

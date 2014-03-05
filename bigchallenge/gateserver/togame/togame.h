@@ -1,8 +1,8 @@
 #ifndef _TOGAME_H
 #define _TOGAME_H
 
-#include "../../agentsession.h"
-#include "core/msgdisp.h"
+#include "common/agentsession.h"
+#include "core/asynnet/msgdisp.h"
 #include "core/thread.h"
 
 typedef struct toGame

@@ -38,7 +38,7 @@ enum{
 	CMD_GAME2C_END,
 
 	//网关到游戏服
-	CMD_GATE2GAME = 400
+	CMD_GATE2GAME = 400,
 	
 	CMD_GATE2GAME_CDISCONNECT, //客户端连接断开
 	
