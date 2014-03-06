@@ -10,7 +10,7 @@ uint32_t recvcount = 0;
 void asynconnect(msgdisp_t disp,sock_ident sock,const char *ip,int32_t port)
 {
     printf("asynconnect,ip:%s,port:%d\n",ip,port);
-    disp->bind(disp,0,sock,1,0,0);//由系统选择poller
+    disp->bind(disp,0,sock,16000,1,0,0);//由系统选择poller
 }
 
 void asynconnected(msgdisp_t disp,sock_ident sock,const char *ip,int32_t port)

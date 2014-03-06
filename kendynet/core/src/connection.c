@@ -4,7 +4,7 @@
 #include "systime.h"
 #include "socket.h"
 
-#define BUFFER_SIZE 65536
+//#define BUFFER_SIZE 65536
 
 //接收相关函数
 static inline void update_next_recv_pos(struct connection *c,int32_t _bytestransfer)
@@ -21,7 +21,7 @@ static inline void update_next_recv_pos(struct connection *c,int32_t _bytestrans
 		if(c->next_recv_pos >= c->next_recv_buf->capacity)
 		{
 			if(!c->next_recv_buf->next)
-				c->next_recv_buf->next = buffer_create_and_acquire(NULL,BUFFER_SIZE);
+				c->next_recv_buf->next = buffer_create_and_acquire(NULL,c->recv_bufsize);
 			c->next_recv_buf = buffer_acquire(c->next_recv_buf,c->next_recv_buf->next);
 			c->next_recv_pos = 0;
 		}
@@ -189,9 +189,9 @@ int32_t send_packet(struct connection *c,wpacket_t w)
 static inline void start_recv(struct connection *c)
 {
     if(test_recvable(c->status)){
-        c->unpack_buf = buffer_create_and_acquire(NULL,BUFFER_SIZE);
+        c->unpack_buf = buffer_create_and_acquire(NULL,c->recv_bufsize);
         c->next_recv_buf = buffer_acquire(NULL,c->unpack_buf);
-        c->wrecvbuf[0].iov_len = BUFFER_SIZE;
+        c->wrecvbuf[0].iov_len = c->recv_bufsize;
         c->wrecvbuf[0].iov_base = c->next_recv_buf->buf;
         c->recv_overlap.m_super.iovec_count = 1;
         c->recv_overlap.m_super.iovec = c->wrecvbuf;
@@ -248,7 +248,7 @@ void RecvFinish(int32_t bytestransfer,struct connection *c,uint32_t err_code)
 				if(!unpack(c)) return;
 				buf = c->next_recv_buf;
 				pos = c->next_recv_pos;
-				recv_size = BUFFER_SIZE;
+				recv_size = c->recv_bufsize;
 				i = 0;
 				do
 				{
@@ -262,14 +262,14 @@ void RecvFinish(int32_t bytestransfer,struct connection *c,uint32_t err_code)
 					{
 						pos = 0;
 						if(!buf->next)
-							buf->next = buffer_create_and_acquire(NULL,BUFFER_SIZE);
+							buf->next = buffer_create_and_acquire(NULL,c->recv_bufsize);
 						buf = buf->next;
 					}
 					++i;
 				}while(recv_size);
 				c->recv_overlap.m_super.iovec_count = i;
 				c->recv_overlap.m_super.iovec = c->wrecvbuf;
-				if(total_size >= BUFFER_SIZE)
+				if(total_size >= c->recv_bufsize)
 				{
 					Post_Recv(c->socket,&c->recv_overlap.m_super);
 					return;
@@ -368,11 +368,13 @@ void acquire_conn(struct connection *con){
 	ref_increase((struct refbase *)con);
 }
 
-int32_t bind2engine(ENGINE e,struct connection *c,
+int32_t bind2engine(ENGINE e,struct connection *c,uint32_t recv_bufsize,
     CCB_PROCESS_PKT cb_process_packet,CCB_DISCONNECT cb_disconnect)
 {
     c->cb_process_packet = cb_process_packet;
     c->cb_disconnect = cb_disconnect;
+    c->recv_bufsize = recv_bufsize;
+    if(c->recv_bufsize == 0) c->recv_bufsize = 4096;
 	start_recv(c);
 	return Bind2Engine(e,c->socket,IoFinish);
 }

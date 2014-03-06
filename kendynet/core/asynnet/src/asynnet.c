@@ -103,7 +103,8 @@ static void process_msg(struct poller_st *n,msg_t msg)
 			if(!s->engine){
 				struct msg_bind *_msgbind = (struct msg_bind*)msg;
 				c->raw = _msgbind->raw;
-                if(0 != n->netpoller->bind(n->netpoller,c,asyncb_process_packet,asyncb_disconnect,
+                if(0 != n->netpoller->bind(n->netpoller,c,_msgbind->recv_bufsize,
+									asyncb_process_packet,asyncb_disconnect,
                                    _msgbind->recv_timeout,
                                    _msgbind->recv_timeout ? asyncb_io_timeout:NULL,
                                    _msgbind->send_timeout,

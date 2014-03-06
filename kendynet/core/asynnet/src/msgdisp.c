@@ -46,7 +46,8 @@ int32_t asynnet_connect(msgdisp_t disp,int32_t pollerid,const char *ip,int32_t p
     return 0;
 }
 
-int32_t asynnet_bind(msgdisp_t disp,int32_t pollerid,sock_ident sock,int8_t raw,uint32_t recv_timeout,uint32_t send_timeout)
+int32_t asynnet_bind(msgdisp_t disp,int32_t pollerid,sock_ident sock,uint32_t recv_bufsize,
+					 int8_t raw,uint32_t recv_timeout,uint32_t send_timeout)
 {
     asynsock_t asysock = cast_2_asynsock(sock);
     if(!asysock) return -1;
@@ -56,6 +57,7 @@ int32_t asynnet_bind(msgdisp_t disp,int32_t pollerid,sock_ident sock,int8_t raw,
     msg->recv_timeout = recv_timeout;
     msg->send_timeout = send_timeout;
     msg->raw = raw;
+    msg->recv_bufsize = recv_bufsize;
     asysock->que = disp->mq;
     asynnet_t asynet = disp->asynet;
     int32_t idx = 0;//当poller_count>1时,netpollers[0]只用于监听和connect

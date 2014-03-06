@@ -79,6 +79,7 @@ struct connection
 	uint8_t  raw;
     volatile uint32_t status;
 	uint8_t  doing_send;
+	uint32_t recv_bufsize;
 };
 
 
@@ -100,6 +101,6 @@ void   active_close(struct connection*);//active close connection
 
 int32_t send_packet(struct connection*,wpacket_t);
 
-int32_t bind2engine(ENGINE,struct connection*,CCB_PROCESS_PKT,CCB_DISCONNECT);
+int32_t bind2engine(ENGINE,struct connection*,uint32_t recv_bufsize,CCB_PROCESS_PKT,CCB_DISCONNECT);
 
 #endif

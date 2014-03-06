@@ -58,6 +58,7 @@ struct msg_bind
     struct msg base;
     uint32_t send_timeout;
     uint32_t recv_timeout;
+    uint32_t recv_bufsize;
     int8_t raw;
 };
 

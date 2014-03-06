@@ -29,6 +29,7 @@ int8_t check_timeout(struct timer* t,struct timer_item *wit,void *ud)
 
 static int32_t _bind(struct netservice *n,
                      struct connection *c,
+                     uint32_t recv_bufsize,
                      CCB_PROCESS_PKT cb_process_packet,
                      CCB_DISCONNECT cb_disconnect,
                      uint32_t rtimeout,
@@ -44,7 +45,7 @@ static int32_t _bind(struct netservice *n,
     //c->wheelitem.callback = check_timeout;
     if(cb_recv_timeout || cb_send_timeout)
         c->_timer_item = register_timer(n->timer,NULL,check_timeout,(void*)c,1000);
-    return bind2engine(n->engine,c,cb_process_packet,cb_disconnect);
+    return bind2engine(n->engine,c,recv_bufsize,cb_process_packet,cb_disconnect);
  }
 
 
