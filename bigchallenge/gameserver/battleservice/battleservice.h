@@ -8,6 +8,7 @@
 #include "../avatar.h"
 #include "core/cstring.h"
 #include "core/lua_util.h"
+#include "core/timer.h"
 
 #define	MAX_BATTLE_SERVICE 64//每线程运行一个battle service
 
@@ -25,7 +26,7 @@ extern battleservice_t g_battleservices[MAX_BATTLE_SERVICE];
 battleservice_t new_battleservice();
 void destroy_battleservice(battleservice_t);
 
-void reg_battle_cmd_handler(uint16_t cmd,cmd_handler handler);
+void reg_battle_cmd_handler(uint16_t cmd,cmd_handler_t handler);
 void build_battle_cmd_handler();
 void register_battle_cfunction(lua_State *L);
 

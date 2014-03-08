@@ -2,7 +2,7 @@
 #include "battleservice.h"
 
 
-static cmd_handler battle_cmd_handlers[MAX_CMD] = {0};
+static cmd_handler_t battle_cmd_handlers[MAX_CMD] = {NULL};
 
 int32_t battle_processpacket(msgdisp_t disp,rpacket_t rpk);
 
@@ -16,10 +16,9 @@ static void *service_main(void *ud){
     return NULL;
 }
 
-void reg_battle_cmd_handler(uint16_t cmd,cmd_handler handler)
+void reg_battle_cmd_handler(uint16_t cmd,cmd_handler_t handler)
 {
-	if(cmd < MAX_CMD)
-		battle_cmd_handlers[cmd] = handler;
+	if(cmd < MAX_CMD) battle_cmd_handlers[cmd] = handler;
 }
 
 battleservice_t new_battleservice()

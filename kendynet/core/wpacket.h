@@ -17,6 +17,7 @@
 #ifndef _WPACKET_H
 #define _WPACKET_H
 #include "packet.h"
+#include "common_define.h"
 
 extern allocator_t wpacket_allocator;
 typedef struct wpacket
@@ -190,28 +191,39 @@ static inline void wpk_write(wpacket_t w,int8_t *addr,uint32_t size)
 	}
 }
 
+#define CHECK_WRITE(TYPE,VALUE)\
+		if(likely(w->writebuf->capacity - w->wpos >= sizeof(TYPE))){\
+			uint32_t pos = w->wpos;\
+			w->wpos += sizeof(TYPE);\
+			*(TYPE*)(w->writebuf->buf+pos) = VALUE;\
+			return;\
+		}
 
 static inline void wpk_write_uint8(wpacket_t w,uint8_t value)
 {
     if(PACKET_RAW(w))return;
+    CHECK_WRITE(uint8_t,value);
 	wpk_write(w,(int8_t*)&value,sizeof(value));
 }
 
 static inline void wpk_write_uint16(wpacket_t w,uint16_t value)
 {
     if(PACKET_RAW(w))return;
+    CHECK_WRITE(uint16_t,value);
 	wpk_write(w,(int8_t*)&value,sizeof(value));
 }
 
 static inline void wpk_write_uint32(wpacket_t w,uint32_t value)
 {
     if(PACKET_RAW(w))return;
+    CHECK_WRITE(uint32_t,value);
 	wpk_write(w,(int8_t*)&value,sizeof(value));
 }
 
 static inline void wpk_write_uint64(wpacket_t w,uint64_t value)
 {
     if(PACKET_RAW(w))return;
+    CHECK_WRITE(uint64_t,value);
 	wpk_write(w,(int8_t*)&value,sizeof(value));
 }
 /*
@@ -227,6 +239,7 @@ static inline void wpk_write_pointer(wpacket_t w,void *ptr)
 static inline void wpk_write_double(wpacket_t w ,double value)
 {
     if(PACKET_RAW(w))return;
+    CHECK_WRITE(double,value);
 	wpk_write(w,(int8_t*)&value,sizeof(value));
 }
 

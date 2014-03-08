@@ -18,6 +18,7 @@
 #define _RPACKET_H
 
 #include "packet.h"
+#include "common_define.h"
 
 extern allocator_t rpacket_allocator;
 typedef struct rpacket
@@ -72,10 +73,10 @@ static inline uint32_t rpk_data_remain(rpacket_t r){
 
 static inline int rpk_read(rpacket_t r,int8_t *out,uint32_t size)
 {
-	if(r->data_remain < size)
+	if(unlikely(r->data_remain < size))
 		return -1;
 
-	while(size>0)
+	while(likely(size>0))
 	{
 		uint32_t copy_size = r->readbuf->size - r->rpos;
 		copy_size = copy_size >= size ? size:copy_size;
@@ -95,12 +96,12 @@ static inline int rpk_read(rpacket_t r,int8_t *out,uint32_t size)
 }
 
 static inline int rpk_peek(rpacket_t r,int8_t *out,uint32_t size){
-    if(r->data_remain < size)
+    if(unlikely(r->data_remain < size))
         return -1;
     buffer_t buffer = r->readbuf;
     uint32_t pos = r->rpos;
     uint32_t data_remain = r->data_remain;
-    while(size>0)
+    while(likely(size>0))
     {
 
         uint32_t copy_size = buffer->size - pos;
@@ -120,8 +121,16 @@ static inline int rpk_peek(rpacket_t r,int8_t *out,uint32_t size){
     return 0;
 }
 
+#define CHECK_READ(TYPE)\
+		if(likely(r->readbuf->size - r->rpos >= sizeof(TYPE))){\
+			uint32_t pos = r->rpos;\
+			r->rpos += sizeof(TYPE);\
+			return *(TYPE*)(r->readbuf->buf+pos);\
+		}
+
 static inline uint8_t rpk_read_uint8(rpacket_t r)
 {
+	CHECK_READ(uint8_t);
 	uint8_t value = 0;
 	rpk_read(r,(int8_t*)&value,sizeof(value));
 	return value;
@@ -129,6 +138,7 @@ static inline uint8_t rpk_read_uint8(rpacket_t r)
 
 static inline uint16_t rpk_read_uint16(rpacket_t r)
 {
+	CHECK_READ(uint16_t);
 	uint16_t value = 0;
 	rpk_read(r,(int8_t*)&value,sizeof(value));
 	return value;
@@ -136,6 +146,7 @@ static inline uint16_t rpk_read_uint16(rpacket_t r)
 
 static inline uint32_t rpk_read_uint32(rpacket_t r)
 {
+	CHECK_READ(uint32_t);
 	uint32_t value = 0;
 	rpk_read(r,(int8_t*)&value,sizeof(value));
 	return value;
@@ -143,6 +154,7 @@ static inline uint32_t rpk_read_uint32(rpacket_t r)
 
 static inline uint64_t rpk_read_uint64(rpacket_t r)
 {
+	CHECK_READ(uint64_t);
 	uint64_t value = 0;
 	rpk_read(r,(int8_t*)&value,sizeof(value));
 	return value;
@@ -150,6 +162,7 @@ static inline uint64_t rpk_read_uint64(rpacket_t r)
 
 static inline double rpk_read_double(rpacket_t r)
 {
+	CHECK_READ(double);
 	double value = 0;
 	rpk_read(r,(int8_t*)&value,sizeof(value));
 	return value;
@@ -164,8 +177,15 @@ static inline void* rpk_read_pointer(rpacket_t r)
 #endif
 }
 */
+
+#define CHECK_PEEK(TYPE)\
+		if(likely(r->readbuf->size - r->rpos >= sizeof(TYPE))){\
+			return *(TYPE*)(r->readbuf->buf+r->rpos);\
+		}
+
 static inline uint16_t rpk_peek_uint16(rpacket_t r)
 {
+	CHECK_PEEK(uint16_t);
     uint16_t value = 0;
     rpk_peek(r,(int8_t*)&value,sizeof(value));
     return value;

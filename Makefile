@@ -9,15 +9,20 @@ TESTDIR = kendynet/test
 
 kendynet.a: \
 		   kendynet/core/src/buffer.c \
+		   kendynet/core/buffer.h \
 		   kendynet/core/src/connection.c \
+		   kendynet/core/connection.h \
 		   kendynet/core/src/poller.c \
 		   kendynet/core/src/epoll.c \
 		   kendynet/core/src/except.c \
 		   kendynet/core/src/kendynet.c \
 		   kendynet/core/src/msgque.c \
+		   kendynet/core/msgque.h \
 		   kendynet/core/src/netservice.c \
+		   kendynet/core/netservice.h \
 		   kendynet/core/src/rbtree.c \
 		   kendynet/core/src/rpacket.c \
+		   kendynet/core/rpacket.h \
 		   kendynet/core/src/socket.c \
 		   kendynet/core/src/sock_util.c \
 		   kendynet/core/src/spinlock.c \
@@ -27,6 +32,7 @@ kendynet.a: \
 		   kendynet/core/src/uthread.c \
 		   kendynet/core/src/refbase.c \
 		   kendynet/core/src/log.c \
+		   kendynet/core/log.h \
 		   kendynet/core/asynnet/src/asynnet.c \
 		   kendynet/core/asynnet/src/asynsock.c \
 		   kendynet/core/asynnet/src/msgdisp.c \
@@ -42,6 +48,7 @@ kendynet.a: \
 		   kendynet/core/src/hash_map.c\
 		   kendynet/core/src/minheap.c\
 		   kendynet/core/src/lookup8.c\
+		   kendynet/core/wpacket.h\
 		   kendynet/core/src/wpacket.c
 		$(CC) $(CFLAGS) -c $^ $(INCLUDE) $(DEFINE)
 		ar -rc kendynet.a *.o

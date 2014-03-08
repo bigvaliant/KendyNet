@@ -1,6 +1,7 @@
 #ifndef _CMD_H
 #define _CMD_H
 
+#include "core/kn_string.h"
 /*
 *   命令码的定义
 */
@@ -48,10 +49,26 @@ enum{
 	CMD_GAME2GATE = 500,
 	CMD_GAME2GATE_END,
 	
-
+	MAX_CMD = 1024
 };
 
 struct rpacket;
-typedef void (*cmd_handler)(struct rpacket*);
+
+enum{
+	FN_C=1,
+	FN_LUA,
+};
+
+typedef struct cmd_handler{
+	uint8_t _type;
+	union{
+		void (*_fn)(struct rpacket*);//for C function
+		string_t lua_fn;             //for lua function
+	};
+}*cmd_handler_t;
+
+void call_handler(cmd_handler_t,struct rpacket*);
+
+
 
 #endif

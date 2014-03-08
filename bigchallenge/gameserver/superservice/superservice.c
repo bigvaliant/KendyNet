@@ -5,7 +5,7 @@
 #include "superservice.h"
 
 superservice_t g_superservice = NULL;
-static cmd_handler super_cmd_handlers[MAX_CMD] = {0};
+static cmd_handler_t super_cmd_handlers[MAX_CMD] = {NULL};
 
 ident* players[MAX_PLAYER] = {0}; 
 
@@ -46,7 +46,7 @@ int32_t super_processpacket(msgdisp_t disp,rpacket_t rpk)
 	}else{
 		if(super_cmd_handlers[cmd]){
 			rpk_read_uint16(rpk);//丢弃cmd
-			super_cmd_handlers[cmd](rpk);
+			call_handler(super_cmd_handlers[cmd],rpk);
 		}else{
 			//记录日志
 		}
@@ -54,10 +54,9 @@ int32_t super_processpacket(msgdisp_t disp,rpacket_t rpk)
     return 1;
 }
 
-void reg_super_cmd_handler(uint16_t cmd,cmd_handler handler)
+void reg_super_cmd_handler(uint16_t cmd,cmd_handler_t handler)
 {
-	if(cmd < MAX_CMD)
-		super_cmd_handlers[cmd] = handler;
+	if(cmd < MAX_CMD) super_cmd_handlers[cmd] = handler;
 }
 
 player_t cast2player(avatarid _avatarid)
