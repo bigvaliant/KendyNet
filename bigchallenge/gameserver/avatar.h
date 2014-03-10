@@ -10,13 +10,12 @@
 
 #define MAX_PLAYER    8191*8  //superservice最多容纳8191*8个玩家对象
 
-typedef struct avatarid{
-	uint16_t super_player_index;
+typedef struct avatarid{	
 	union{
 		struct{
-			uint32_t battleservice_id:7;        
-			uint32_t map_id:14;
-			uint32_t ojb_index:11;     
+			uint32_t battleservice_id:5;        
+			uint32_t map_id:11;
+			uint32_t ojb_index:16;     
 		};
 		uint32_t     data;
 	};
@@ -34,7 +33,6 @@ typedef struct player{
 static inline avatarid rpk_read_avatarid(rpacket_t rpk)
 {
 	avatarid _avatarid;
-	_avatarid.super_player_index = rpk_read_uint16(rpk);
 	_avatarid.data = rpk_read_uint32(rpk);
 	return _avatarid;
 }
@@ -42,13 +40,12 @@ static inline avatarid rpk_read_avatarid(rpacket_t rpk)
 static inline avatarid rpk_reverse_read_avatarid(rpacket_t rpk)
 {
 	avatarid _avatarid;
-	reverse_read(rpk,(int8_t*)&_avatarid,3);
+	_avatarid.data = reverse_read_uint32(rpk);
 	return _avatarid;	
 }
 
 static inline void wpk_write_avatarid(wpacket_t wpk,avatarid _avatarid)
 {
-	wpk_write_uint16(wpk,_avatarid.super_player_index);
 	wpk_write_uint32(wpk,_avatarid.data);
 }
 

@@ -22,10 +22,8 @@ gameservice.a:\
 		gameserver/superservice/superservice.h\
 		gameserver/battleservice/battleservice.h\
 		gameserver/battleservice/battleservice.c\
-		gameserver/battleservice/battleaoi.c\
-		gameserver/battleservice/battleaoi.h\
-		gameserver/battleservice/pathfinding.c\
-		gameserver/battleservice/pathfinding.h		
+		gameserver/battleservice/map.c\
+		gameserver/battleservice/map.h		
 		$(CC) $(CFLAGS) -c $^ $(INCLUDE) $(DEFINE)
 		ar -rc gameservice.a *.o
 		rm -f *.o

@@ -4,7 +4,7 @@
 
 #define BLOCK(M,X,Y) (&M->blocks[Y*M->x_size+X])
 
-struct aoi_map *create_map(uint32_t max_aoi_objs,uint32_t _length,uint32_t radius,
+struct aoi_map *aoi_create(uint32_t max_aoi_objs,uint32_t _length,uint32_t radius,
 					   struct point2D *top_left,struct point2D *bottom_right)
 {
 	uint32_t length = abs(top_left->x - bottom_right->x);
@@ -197,7 +197,7 @@ static inline void block_process_leave(struct aoi_map *m,struct aoi_block *bl,st
 	}
 }
 
-int8_t move_to(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
+int8_t aoi_moveto(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
 {
 	struct point2D new_pos = {_x,_y};
 	struct point2D old_pos = o->pos;
@@ -227,7 +227,7 @@ int8_t move_to(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
 #define ENTER_BLOCKS(M,POS,RADIUS) cal_blocks(M,M->new_blocks,NULL,POS,RADIUS)
 #define LEAVE_BLOCKS(M,POS,RADIUS) cal_blocks(M,M->old_blocks,NULL,POS,RADIUS)
 
-int32_t enter_map(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
+int32_t aoi_enter(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
 {
 	o->pos.x = _x;
 	o->pos.y = _y;
@@ -244,7 +244,7 @@ int32_t enter_map(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
 	return 0;
 }
 
-int32_t leave_map(struct aoi_map *m,struct aoi_object *o)
+int32_t aoi_leave(struct aoi_map *m,struct aoi_object *o)
 {
 	struct aoi_block *block = get_block_by_point(m,&o->pos);
 	if(!block) return -1;
@@ -258,7 +258,7 @@ int32_t leave_map(struct aoi_map *m,struct aoi_object *o)
 	return 0;			
 }
 
-void  destroy_map(struct aoi_map *m)
+void  aoi_destroy(struct aoi_map *m)
 {
 	free(m->new_blocks);
 	free(m->old_blocks);

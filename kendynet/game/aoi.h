@@ -80,16 +80,16 @@ struct aoi_map{
 	struct aoi_block blocks[];
 };
 
-struct aoi_map *create_map(uint32_t max_aoi_objs,uint32_t _length,uint32_t radius,
+struct aoi_map *aoi_create(uint32_t max_aoi_objs,uint32_t _length,uint32_t radius,
 					   struct point2D *top_left,struct point2D *bottom_right);
 					   
-void  destroy_map(struct aoi_map*);
+void  aoi_destroy(struct aoi_map*);
 
-int8_t move_to(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y);
+int8_t aoi_moveto(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y);
 
-int32_t enter_map(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y);
+int32_t aoi_enter(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y);
 
-int32_t leave_map(struct aoi_map *m,struct aoi_object *o);
+int32_t aoi_leave(struct aoi_map *m,struct aoi_object *o);
 
 
 

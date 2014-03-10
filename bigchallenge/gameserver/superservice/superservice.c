@@ -61,18 +61,10 @@ void reg_super_cmd_handler(uint16_t cmd,cmd_handler_t handler)
 
 player_t cast2player(avatarid _avatarid)
 {
-	uint32_t index = _avatarid.super_player_index;
+	uint32_t index = _avatarid.ojb_index;
 	if(index >= MAX_PLAYER) return NULL;
 	ident *_ident = players[index];
 	if(_ident){
-		/*player_t _player = cast_2_refbase(*_ident);
-		if(_player)
-		{
-			if(((avatar_t)_player)->_avatarid.data == _avatarid.data)
-				return _player;
-			else		
-				release_player(_player);
-		}*/
 		return (player_t)cast_2_refbase(*_ident);
 	}
 	return NULL;
