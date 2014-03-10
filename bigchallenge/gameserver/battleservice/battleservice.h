@@ -1,14 +1,15 @@
 #ifndef _BATTLESERVICE_H
 #define _BATTLESERVICE_H
 
-#include "core/msgdisp.h"
+#include "core/asynnet/msgdisp.h"
 #include "core/thread.h"
 #include "llist.h"
 #include "db/asyndb.h"
 #include "../avatar.h"
-#include "core/cstring.h"
+#include "core/kn_string.h"
 #include "core/lua_util.h"
 #include "core/timer.h"
+#include "common/cmd.h"
 
 #define	MAX_BATTLE_SERVICE 64//每线程运行一个battle service
 
@@ -18,7 +19,7 @@ typedef struct battleservice
 	thread_t           thd;
 	msgdisp_t          msgdisp;
 	atomic_32_t        player_count;    //此service上的玩家数量
-	luaObject          battlemgr;       //实际的战场由lua对象管理
+	luaObject_t        battlemgr;       //实际的战场由lua对象管理
 }*battleservice_t;
 
 extern battleservice_t g_battleservices[MAX_BATTLE_SERVICE];

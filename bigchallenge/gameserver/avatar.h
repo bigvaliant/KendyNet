@@ -1,10 +1,10 @@
 #ifndef _AVATAR_H
 #define _AVATAR_H
 
-#include "core/msgdisp.h"
+#include "core/asynnet/msgdisp.h"
 #include "common/agentsession.h"
 #include "core/refbase.h"
-#include "core/cstring.h"
+#include "core/kn_string.h"
 #include "core/rpacket.h"
 #include "core/wpacket.h"
 
@@ -42,7 +42,7 @@ static inline avatarid rpk_read_avatarid(rpacket_t rpk)
 static inline avatarid rpk_reverse_read_avatarid(rpacket_t rpk)
 {
 	avatarid _avatarid;
-	reverse_read(rpk,&_avatarid,3);
+	reverse_read(rpk,(int8_t*)&_avatarid,3);
 	return _avatarid;	
 }
 

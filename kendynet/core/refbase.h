@@ -81,12 +81,6 @@ static inline ident make_ident(struct refbase *ptr)
         return _ident;
 }
 
-static inline ident make_empty_ident()
-{
-    ident _ident = {0,NULL};
-        return _ident;
-}
-
 static inline struct refbase *cast_2_refbase(ident _ident)
 {
     struct refbase *ptr = NULL;
@@ -129,6 +123,12 @@ static inline struct refbase *cast_2_refbase(ident _ident)
 return ptr;*/    
 }
 
+static inline void make_empty_ident(ident *_ident)
+{
+    _ident->identity = 0;
+    _ident->ptr = NULL;
+}
+
 static inline int32_t is_vaild_ident(ident _ident)
 {
         if(!_ident.ptr || !_ident.identity) return 0;
@@ -152,5 +152,6 @@ static inline int8_t is_type(ident a,uint16_t type)
 }
 
 #define TO_IDENT(OTHER_IDENT) (*(ident*)&OTHER_IDENT)
-
+#define EQ_IDENT(IDENT1,IDENT2) eq_ident(TO_IDENT(IDENT1),TO_IDENT(IDENT2))
+#define MAKE_EMPTY_IDENT(IDENT) make_empty_ident(&TO_IDENT(IDENT))
 #endif

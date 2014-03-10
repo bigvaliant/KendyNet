@@ -14,6 +14,8 @@ end
 function battle:init()
 	self.aoi = NewAoiMap()
 	self.path = CreateAstarMap()
+	--创建地图上的资源,NPC等
+	
 	return self
 end
 
@@ -24,9 +26,7 @@ end
 
 --地图定时器函数
 function battle:tick(now)
-	
 	--处理地图上avatar的位置移动和视野移动
-
 end
 
 

@@ -38,7 +38,8 @@ int luaNewAoiObj(lua_State *L){
 
 int luaDelAoiObj(lua_State *L){
 	struct aoi_object *aoi_obj = lua_touserdata(L,-1);
-	release_luaObj(aoi_obj);
+	release_luaObj((luaObject_t)aoi_obj->ud);
+	free(aoi_obj);
 	return 0;
 }
 

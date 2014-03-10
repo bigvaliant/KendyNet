@@ -1,5 +1,7 @@
-#include "../common/cmd.h"
+#include "common/cmd.h"
 #include "battleservice.h"
+#include "core/tls.h"
+#include "common/tls_define.h"
 
 
 static cmd_handler_t battle_cmd_handlers[MAX_CMD] = {NULL};
@@ -8,8 +10,8 @@ int32_t battle_processpacket(msgdisp_t disp,rpacket_t rpk);
 
 static void *service_main(void *ud){
     battleservice_t service = (battleservice_t)ud;
-    tls_create(MSGDISCP_TLS,(void*)service->msgdisp,NULL);
-    tls_create(BATTLESERVICE_TLS,(void*)service,NULL);
+    tls_set(MSGDISCP_TLS,(void*)service->msgdisp);
+    tls_set(BATTLESERVICE_TLS,(void*)service);
     while(!service->stop){
         msg_loop(service->msgdisp,50);
     }
@@ -41,7 +43,8 @@ battleservice_t new_battleservice()
 		exit(0);
 	}
 	bservice->battlemgr = create_luaObj(L,-1);
-	bservice->msgdisp = new_msgdisp(NULL,NULL,NULL, NULL,battle_processpacket,NULL);
+	bservice->msgdisp = new_msgdisp(NULL,1,
+                                    CB_PROCESSPACKET(battle_processpacket));
 	bservice->thd = create_thread(THREAD_JOINABLE);
     thread_start_run(bservice->thd,service_main,(void*)bservice);
 	return bservice;

@@ -1,12 +1,13 @@
 #ifndef _SUPERSERVICE_H
 #define _SUPERSERVICE_H
 
-#include "core/msgdisp.h"
+#include "core/asynnet/msgdisp.h"
 #include "core/thread.h"
 #include "llist.h"
 #include "db/asyndb.h"
 #include "../avatar.h"
-#include "core/cstring.h"
+#include "core/kn_string.h"
+#include "common/cmd.h"
 
 typedef struct superservice
 {
