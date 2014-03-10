@@ -25,7 +25,7 @@ static void cb_leave(struct aoi_object *self,struct aoi_object *other)
 	CALL_OBJ_FUNC1(lua_self,"LeaveView",0,PUSH_LUAOBJECT(lua_self->L,lua_other));	
 }
 
-int lua_newaoiobj(lua_State *L){
+int luaNewAoiObj(lua_State *L){
 	luaObject_t self = create_luaObj(L,-1);
 	struct aoi_object *aoi_obj = calloc(1,sizeof(*aoi_obj));
 	aoi_obj->ud = self;
@@ -36,13 +36,38 @@ int lua_newaoiobj(lua_State *L){
 	return 1;
 }
 
-int lua_delaoiobj(lua_State *L){
+int luaDelAoiObj(lua_State *L){
 	struct aoi_object *aoi_obj = lua_touserdata(L,-1);
 	release_luaObj(aoi_obj);
 	return 0;
 }
 
+int luaNewAoiMap(lua_State *L){
+	return 1;
+}
+
+int luaDestroyAoiMap(lua_State *L){
+	return 0;
+}
+
+int luaAoiEnterMap(lua_State *L){
+	return 1;
+}
+
+int luaAoiLeaveMap(lua_State *L){
+	return 1;
+}
+
+int luaAoiMoveTo(lua_State *L){
+	return 0;
+}
+
 void register_aoi2lua(lua_State *L){     
-	lua_register(L,"NewAoiObj",&lua_newaoiobj);
-	lua_register(L,"DelAoiObj",&lua_delaoiobj);
+	lua_register(L,"NewAoiObj",&luaNewAoiObj);
+	lua_register(L,"DelAoiObj",&luaDelAoiObj);
+	lua_register(L,"NewAoiMap",&luaNewAoiMap);
+	lua_register(L,"DestroyAoiMap",&luaDestroyAoiMap);
+	lua_register(L,"AoiEnterMap",&luaAoiEnterMap);
+	lua_register(L,"AoiLeaveMap",&luaAoiLeaveMap);
+	lua_register(L,"AoiMoveTo",&luaAoiMoveTo);
 }
