@@ -220,34 +220,45 @@ int luaGetPath(lua_State *L){
 	return 1;
 }
 
-int luaNewAoiObj(lua_State *L){
-	luaObject_t self = create_luaObj(L,-1);
+int luaAoiEnterMap(lua_State *L){
+	struct battlemap *battlemap = (struct battlemap*)lua_touserdata(L,-1);
+	luaObject_t self = create_luaObj(L,-2);
+	int x = (int)lua_tonumber(L,-3);
+	int y = (int)lua_tonumber(L,-4);	
 	struct aoi_object *aoi_obj = calloc(1,sizeof(*aoi_obj));
 	aoi_obj->ud = self;
 	aoi_obj->in_myscope = in_myscope;
 	aoi_obj->cb_enter = cb_enter;
 	aoi_obj->cb_leave = cb_leave;
-	PUSH_LUSRDATA(L,aoi_obj);
-	return 1;
-}
-
-int luaDelAoiObj(lua_State *L){
-	struct aoi_object *aoi_obj = lua_touserdata(L,-1);
-	release_luaObj((luaObject_t)aoi_obj->ud);
-	free(aoi_obj);
-	return 0;
-}
-
-
-int luaAoiEnterMap(lua_State *L){
+	
+	if(0 == aoi_enter(battlemap->aoi,aoi_obj,x,y)){
+		PUSH_LUSRDATA(L,aoi_obj);
+	}else
+	{
+		free(aoi_obj);
+		PUSH_NIL(L);
+	}
 	return 1;
 }
 
 int luaAoiLeaveMap(lua_State *L){
+	struct battlemap *battlemap = (struct battlemap*)lua_touserdata(L,-1);	
+	struct aoi_object *aoi_obj = lua_touserdata(L,-2);
+	if(0 == aoi_leave(battlemap->aoi,aoi_obj)){
+		release_luaObj((luaObject_t)aoi_obj->ud);
+		free(aoi_obj);
+		PUSH_BOOL(L,1);
+	}else
+		PUSH_BOOL(L,0);
 	return 1;
 }
 
 int luaAoiMoveTo(lua_State *L){
+	struct battlemap *battlemap = (struct battlemap*)lua_touserdata(L,-1);	
+	struct aoi_object *aoi_obj = lua_touserdata(L,-2);
+	int x = (int)lua_tonumber(L,-3);
+	int y = (int)lua_tonumber(L,-4);
+	aoi_moveto(battlemap->aoi,aoi_obj,x,y);
 	return 0;
 }
 
@@ -256,8 +267,6 @@ void map_register2lua(lua_State *L)
 	lua_register(L,"NewBattleMap",&luaNewBattleMap);
 	lua_register(L,"DelBattleMap",&luaDelBattleMap);
 	lua_register(L,"GetPath",&luaGetPath);
-	lua_register(L,"NewAoiObj",&luaNewAoiObj);
-	lua_register(L,"DelAoiObj",&luaDelAoiObj);
 	lua_register(L,"AoiEnterMap",&luaAoiEnterMap);
 	lua_register(L,"AoiLeaveMap",&luaAoiLeaveMap);
 	lua_register(L,"AoiMoveTo",&luaAoiMoveTo);	

@@ -197,7 +197,7 @@ static inline void block_process_leave(struct aoi_map *m,struct aoi_block *bl,st
 	}
 }
 
-int8_t aoi_moveto(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
+int32_t aoi_moveto(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y)
 {
 	struct point2D new_pos = {_x,_y};
 	struct point2D old_pos = o->pos;

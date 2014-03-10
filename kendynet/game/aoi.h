@@ -85,7 +85,7 @@ struct aoi_map *aoi_create(uint32_t max_aoi_objs,uint32_t _length,uint32_t radiu
 					   
 void  aoi_destroy(struct aoi_map*);
 
-int8_t aoi_moveto(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y);
+int32_t aoi_moveto(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y);
 
 int32_t aoi_enter(struct aoi_map *m,struct aoi_object *o,int32_t _x,int32_t _y);
 
