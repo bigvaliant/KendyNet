@@ -10,10 +10,10 @@ void dorequest(struct redis_worker *worker,db_request_t req)
 				db_result_t result = NULL;	
 				if(r->type == REDIS_REPLY_NIL)
 				{
-					result = new_dbresult(r,req->callback,-1,req->ud);
+					result = new_dbresult(db_redis,r,req->callback,-1,req->ud);
 				}else
 				{
-					result = new_dbresult(r,req->callback,0,req->ud);
+					result = new_dbresult(db_redis,r,req->callback,0,req->ud);
 				}	
 				asyndb_sendresult(req->sender,result);
 			}else if(req->type == db_set){
@@ -21,9 +21,9 @@ void dorequest(struct redis_worker *worker,db_request_t req)
 					//需要result
 					db_result_t result = NULL;
 					if(!(r->type == REDIS_REPLY_STATUS && strcasecmp(r->str,"OK") == 0))
-						result = new_dbresult(r,req->callback,-1,req->ud);
+						result = new_dbresult(db_redis,r,req->callback,-1,req->ud);
 					else
-						result = new_dbresult(r,req->callback,0,req->ud);
+						result = new_dbresult(db_redis,r,req->callback,0,req->ud);
 					asyndb_sendresult(req->sender,result);
 				}		
 			}
@@ -90,4 +90,40 @@ int32_t redis_request(asyndb_t asyndb,db_request_t req)
 		return -1;
 	}
 	return 0;
+}
+
+void    redis_destroy(asyndb_t asyndb)
+{
+	struct asynredis *redis = (struct asynredis*)asyndb;
+	mutex_lock(redis->mtx);
+	struct lnode *n = llist_head(&redis->workers);
+	while(n)
+	{
+		struct redis_worker *worker = (struct redis_worker*)n;
+		worker->stop = 1;
+		thread_join(worker->worker);
+	}
+	while((n = llist_pop(&redis->workers)) != NULL)
+	{
+		struct redis_worker *worker = (struct redis_worker*)n;
+		redisFree(worker->context);
+		destroy_thread(&worker->worker);
+		free(worker);
+	}
+	mutex_unlock(redis->mtx);
+	mutex_destroy(&redis->mtx);
+	free(asyndb);
+}
+
+void request_destroyer(void *ptr);
+asyndb_t redis_new()
+{
+	struct asynredis *redis = calloc(1,sizeof(*redis));
+	llist_init(&redis->workers);
+	redis->mtx = mutex_create();
+	redis->mq =  new_msgque(32,request_destroyer);
+	redis->base.connectdb = redis_connectdb;
+	redis->base.request = redis_request;
+	redis->base.destroy_function = redis_destroy;
+	return (asyndb_t)redis;
 }

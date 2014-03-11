@@ -77,7 +77,7 @@ int32_t asynnet_bind(msgdisp_t disp,int32_t pollerid,sock_ident sock,uint32_t re
 
 sock_ident asynnet_listen(msgdisp_t disp,int32_t pollerid,const char *ip,int32_t port,int32_t *reason)
 {
-    sock_ident ret = {make_empty_ident()};
+    sock_ident ret;MAKE_EMPTY_IDENT(ret);
     asynnet_t asynet = disp->asynet;
 
     if(pollerid <= 0 || pollerid > asynet->poller_count)

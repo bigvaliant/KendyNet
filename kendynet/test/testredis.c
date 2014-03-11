@@ -57,7 +57,7 @@ int main(int argc,char **argv)
     msgdisp_t disp2 = new_msgdisp(NULL,0);
 
     thread_t service2 = create_thread(THREAD_JOINABLE);    
-    asydb = new_asyndb();
+    asydb = new_asyndb(db_redis);
     asydb->connectdb(asydb,"127.0.0.1",6379);
     asydb->connectdb(asydb,"127.0.0.1",6379);
     //发出第一个请求uu

@@ -30,45 +30,24 @@ void request_destroyer(void *ptr)
 	free_dbrequest((db_request_t)ptr);
 }
 
-asyndb_t new_asyndb()
+asyndb_t new_asyndb(uint8_t dbtype)
 {
-	struct asynredis *redis = calloc(1,sizeof(*redis));
-	llist_init(&redis->workers);
-	redis->mtx = mutex_create();
-	redis->mq =  new_msgque(32,request_destroyer);
-	redis->base.connectdb = redis_connectdb;
-	redis->base.request = redis_request;
-	return (asyndb_t)redis;
+	if(dbtype == db_redis){
+		return redis_new();
+	}else
+		return NULL;
 }
 
 void free_asyndb(asyndb_t asyndb)
 {
-	
-	struct asynredis *redis = (struct asynredis*)asyndb;
-	mutex_lock(redis->mtx);
-	struct lnode *n = llist_head(&redis->workers);
-	while(n)
-	{
-		struct redis_worker *worker = (struct redis_worker*)n;
-		worker->stop = 1;
-		thread_join(worker->worker);
-	}
-	while((n = llist_pop(&redis->workers)) != NULL)
-	{
-		struct redis_worker *worker = (struct redis_worker*)n;
-		redisFree(worker->context);
-		destroy_thread(&worker->worker);
-		free(worker);
-	}
-	mutex_unlock(redis->mtx);
-	mutex_destroy(&redis->mtx);
-	free(asyndb);
+	asyndb->destroy_function(asyndb);
 } 
 
-db_result_t new_dbresult(void *result_set,DB_CALLBACK callback ,int32_t err,void *ud)
+db_result_t new_dbresult(uint8_t dbtype,void *result_set,DB_CALLBACK callback ,int32_t err,void *ud)
 {
 	db_result_t result = calloc(1,sizeof(*result));
 	MSG_TYPE(result) = MSG_DB_RESULT;
+	result->dbtype = dbtype;
 	result->callback = callback;
 	result->err = err;
 	result->ud = ud;

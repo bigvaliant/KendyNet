@@ -27,7 +27,5 @@ struct asynredis
 	msgque_t   mq;
 };
 
-int32_t redis_connectdb(asyndb_t,const char *ip,int32_t port);
-int32_t redis_request(asyndb_t,db_request_t);
-
+asyndb_t redis_new();
 #endif

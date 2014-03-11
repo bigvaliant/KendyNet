@@ -24,6 +24,11 @@
 struct db_result;
 typedef void (*DB_CALLBACK)(struct db_result*);
 
+enum{
+	db_redis = 1,
+	db_mysql,
+};
+
 enum
 {
 	db_get = 1,
@@ -48,6 +53,7 @@ typedef struct db_result
 	void       *result_set;
 	int32_t     err;
 	void        *ud;
+	uint8_t     dbtype;
 }*db_result_t;
 
 
@@ -55,13 +61,14 @@ typedef struct asyndb
 {
 	 int32_t (*connectdb)(struct asyndb*,const char *ip,int32_t port);
 	 int32_t (*request)(struct asyndb*,db_request_t);
+	 void    (*destroy_function)(struct asyndb*);
 }*asyndb_t;
 
 
-asyndb_t new_asyndb();
+asyndb_t new_asyndb(uint8_t dbtype);
 void     free_asyndb(asyndb_t);
 
-db_result_t new_dbresult(void*,DB_CALLBACK,int32_t,void*);
+db_result_t new_dbresult(uint8_t,void*,DB_CALLBACK,int32_t,void*);
 void     free_dbresult(db_result_t);
 
 db_request_t  new_dbrequest(uint8_t type,const char*,DB_CALLBACK,void*,msgdisp_t);
