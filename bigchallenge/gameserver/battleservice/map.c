@@ -149,19 +149,6 @@ struct battlemap
 	struct aoi_map *aoi;
 };
 
-//地图定义
-struct mapdefine
-{
-	struct rbnode rbnode;
-	string_t   mapname;
-	struct map *map;
-	//以下字段由aoi使用
-	uint32_t       length;
-	uint32_t       radius;
-    struct point2D top_left;
-    struct point2D bottom_right;
-};
-
 rbtree_t g_mapdefine;
 
 int32_t fn_compare(void *l,void *r)

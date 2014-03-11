@@ -46,7 +46,7 @@ agentplayer_t get_agentplayer(agentservice_t service,agentsession session)
 }
 
 
-static void agent_connected(msgdisp_t disp,sock_ident sock,const char *ip,int32_t port)
+static void agent_connect(msgdisp_t disp,sock_ident sock,const char *ip,int32_t port)
 {
 	agentservice_t service = get_thd_agentservice();
 	agentplayer_t ply = new_agentplayer(service,sock);
@@ -60,9 +60,27 @@ static void agent_connected(msgdisp_t disp,sock_ident sock,const char *ip,int32_
 	}else
 	{
 		asynsock_set_ud(sock,(void*)ply->session.data);
-		service->msgdisp->bind(service->msgdisp,0,sock,0,30*1000,0);//由系统选择poller
+		service->msgdisp->bind(service->msgdisp,0,sock,4096,0,30*1000,0);//由系统选择poller
 	}
 }
+
+/*static void agent_connected(msgdisp_t disp,sock_ident sock,const char *ip,int32_t port)
+{
+	agentservice_t service = get_thd_agentservice();
+	agentplayer_t ply = new_agentplayer(service,sock);
+	if(!ply)
+	{
+		//发送一个消息，通知系统繁忙然后关闭连接
+		wpacket_t wpk = wpk_create(64,0);
+		wpk_write_uint16(wpk,CMD_GATE2C_BUSY);
+		asyn_send(sock,wpk);
+		asynsock_close(sock);
+	}else
+	{
+		asynsock_set_ud(sock,(void*)ply->session.data);
+		service->msgdisp->bind(service->msgdisp,0,sock,4096,0,30*1000,0);//由系统选择poller
+	}
+}*/
 
 static void agent_disconnected(msgdisp_t disp,sock_ident sock,const char *ip,int32_t port,uint32_t err)
 {
@@ -134,7 +152,7 @@ agentservice_t new_agentservice(uint8_t agentid,asynnet_t asynet){
 	service->agentid = agentid;
 	service->_idmgr = new_idmgr(1,MAX_ANGETPLAYER);
 	service->msgdisp = new_msgdisp(asynet,3,
-                                   CB_CONNECTED(agent_connected),
+                                   CB_CONNECT(agent_connect),
                                    CB_DISCNT(agent_disconnected),
                                    CB_PROCESSPACKET(agent_processpacket)
                                    );

@@ -3,6 +3,8 @@
 #include "battleservice/battleservice.h"
 #include "core/lua_util.h"
 #include "superservice.h"
+#include "core/log.h"
+#include "core/asynnet/msgdisp.h"
 
 superservice_t g_superservice = NULL;
 static cmd_handler_t super_cmd_handlers[MAX_CMD] = {NULL};
@@ -35,22 +37,30 @@ void super_disconnected(msgdisp_t disp,sock_ident sock,const char *ip,int32_t po
 
 int32_t super_processpacket(msgdisp_t disp,rpacket_t rpk)
 {
-	/*uint16_t cmd = rpk_peek_uint16(rpk);
-	if(cmd >= CMD_CLIENT2BATTLE && cmd <= CMD_CLIENT2BATTLE_END)
+	uint16_t cmd = rpk_peek_uint16(rpk);
+	if(cmd >= CMD_C2GAME && cmd <= CMD_C2GAME_END)
 	{
-		//将消息转发到battle
-		avatarid _avatid = rpk_reverse_read_avatarid(rpk);
-		battleservice_t battle = get_battle_by_index((uint8_t)_avatid.battleservice_id);
-		if(battle && 0 == push_msg(battle->msgdisp,rpk))
-			return 0;//不销毁rpk,由battleservice负责销毁
-	}else{
-		if(super_cmd_handlers[cmd]){
-			rpk_read_uint16(rpk);//丢弃cmd
-			call_handler(super_cmd_handlers[cmd],rpk);
+		if(cmd > CMD_C2BATTLE && cmd < CMD_C2BATTLE_END)
+		{
+			//发送到战场的消息
+			avatarid avatid = rpk_reverse_read_avatarid(rpk);
+			battleservice_t battle = get_battle_by_index((uint8_t)avatid.battleservice_id);
+			if(battle && 0 == send_msg(NULL,battle->msgdisp,(msg_t)rpk))
+				return 0;//不销毁rpk,由battleservice负责销毁			
 		}else{
-			//记录日志
-		}
-	}*/
+			ident _ident= reverse_read_ident(rpk);
+			player_t ply = (player_t)cast_2_refbase(_ident);
+			if(ply && ply->_msgdisp == disp && ply->_status == normal){
+				if(super_cmd_handlers[cmd]){
+					rpk_read_uint16(rpk);//丢弃cmd
+					call_handler(super_cmd_handlers[cmd],rpk,ply);
+				}else{
+					SYS_LOG(LOG_INFO,"unknow cmd:%d\n",cmd);
+				}
+			}
+			if(ply) ref_decrease((struct refbase*)ply);	
+		}		
+	}
     return 1;
 }
 
@@ -74,3 +84,5 @@ void start_superservice()
 {
 	g_superservice = calloc(1,sizeof(*g_superservice));
 }
+
+

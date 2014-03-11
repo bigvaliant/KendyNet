@@ -18,3 +18,51 @@ int32_t togame_processpacket(msgdisp_t disp,rpacket_t rpk)
 	return 1;
 }
 
+static void togame_connect(msgdisp_t disp,sock_ident sock,const char *ip,int32_t port)
+{
+	disp->bind(disp,0,sock,65536,0,180*1000,0);//由系统选择poller
+}
+
+static void togame_connected(msgdisp_t disp,sock_ident sock,const char *ip,int32_t port)
+{
+	g_togame->togame = sock;
+}
+
+static void togame_disconnected(msgdisp_t disp,sock_ident sock,const char *ip,int32_t port,uint32_t err)
+{
+	MAKE_EMPTY_IDENT(g_togame->togame);
+}
+
+
+static void check_togame_connection(){
+
+}
+
+static void *service_main(void *ud){
+    toGame_t service = (toGame_t)ud;
+    while(!service->stop){
+		check_togame_connection();//检查到game的连接
+        msg_loop(service->msgdisp,50);
+    }
+    return NULL;
+}
+
+
+int32_t start_togame_service(asynnet_t asynet){
+	//读取配置文件
+	toGame_t g_togame = calloc(1,sizeof(*g_togame));
+	g_togame->msgdisp = new_msgdisp(asynet,4,
+								   CB_CONNECT(togame_connect),
+                                   CB_CONNECTED(togame_connected),
+                                   CB_DISCNT(togame_disconnected),
+                                   CB_PROCESSPACKET(togame_processpacket)
+                                   );
+	g_togame->thd = create_thread(THREAD_JOINABLE); 
+	thread_start_run(g_togame->thd,service_main,(void*)g_togame);
+	return 0;
+}
+
+void stop_togame_service(){
+	g_togame->stop = 1;
+	thread_join(g_togame->thd);
+}

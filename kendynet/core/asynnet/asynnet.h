@@ -57,27 +57,4 @@ int32_t    get_port_remote(sock_ident,int32_t *port);
 void       asynsock_set_ud(sock_ident,void*);
 void*      asynsock_get_ud(sock_ident);
 
-
-static inline ident rpk_read_ident(rpacket_t rpk)
-{
-    ident _ident;
-    _ident.identity = rpk_read_uint64(rpk);
-#ifdef _X64
-        _ident.ptr = (void*)rpk_read_uint64(rpk);
-#else
-        _ident.ptr = (void*)rpk_read_uint32(rpk);
-#endif
-    return _ident;
-}
-
-static inline void wpk_write_ident(wpacket_t wpk,ident _ident)
-{
-    wpk_write_uint64(wpk,_ident.identity);
-#ifdef _X64
-        wpk_write_uint64(wpk,(uint64_t)_ident.ptr);
-#else
-        wpk_write_uint32(wpk,(uint32_t)_ident.ptr);
-#endif
-}
-
 #endif

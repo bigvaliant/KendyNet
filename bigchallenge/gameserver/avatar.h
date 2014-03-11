@@ -21,6 +21,12 @@ typedef struct avatarid{
 	};
 }avatarid;
 
+enum{
+	normal  = 0,   
+	playing = 1,   //战场中
+	queueing,      //战场排队中   
+	logout,        //请求登出
+};
 
 typedef struct player{
 	struct refbase ref;
@@ -28,6 +34,7 @@ typedef struct player{
 	string_t     _actname;
 	msgdisp_t    _msgdisp;
 	uint16_t     _index;
+	uint8_t      _status;
 }player,*player_t;
 
 static inline avatarid rpk_read_avatarid(rpacket_t rpk)

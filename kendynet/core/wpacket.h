@@ -226,6 +226,14 @@ static inline void wpk_write_uint64(wpacket_t w,uint64_t value)
     CHECK_WRITE(uint64_t,value);
 	wpk_write(w,(int8_t*)&value,sizeof(value));
 }
+
+static inline void wpk_write_ident(wpacket_t w,ident value)
+{
+    if(PACKET_RAW(w))return;
+    CHECK_WRITE(ident,value);
+	wpk_write(w,(int8_t*)&value,sizeof(value));
+}
+
 /*
 static inline void wpk_write_pointer(wpacket_t w,void *ptr)
 {

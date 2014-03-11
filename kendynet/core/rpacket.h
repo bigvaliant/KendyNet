@@ -167,6 +167,15 @@ static inline double rpk_read_double(rpacket_t r)
 	rpk_read(r,(int8_t*)&value,sizeof(value));
 	return value;
 }
+
+static inline ident rpk_read_ident(rpacket_t r)
+{
+	CHECK_READ(ident);
+	ident value;
+	rpk_read(r,(int8_t*)&value,sizeof(value));
+	return value;	
+}
+
 /*
 static inline void* rpk_read_pointer(rpacket_t r)
 {
@@ -266,6 +275,15 @@ static inline double reverse_read_double(rpacket_t r)
     reverse_read(r,(int8_t*)&value,sizeof(value));
     return value;
 }
+
+static inline ident reverse_read_ident(rpacket_t r)
+{
+    ident value;
+    reverse_read(r,(int8_t*)&value,sizeof(value));
+    return value;
+}
+
+
 /*
 static inline void* reverse_read_pointer(rpacket_t r){
 #ifdef _X64

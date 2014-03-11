@@ -17,9 +17,11 @@ enum{
 
 	//客户端到游戏服务器
 	CMD_C2GAME = 100,
-
-	CMD_C2GAME_MOVE,   //客户端移动请求
+	CMD_ENTER_BATTLE,  //请求进入战场
 	
+	CMD_C2BATTLE,
+	CMD_C2GAME_MOVE,   //客户端移动请求
+	CMD_C2BATTLE_END,
 	CMD_C2GAME_END,
 	
 	
@@ -59,15 +61,17 @@ enum{
 	FN_LUA,
 };
 
+struct player;
+
 typedef struct cmd_handler{
 	uint8_t _type;
 	union{
-		void (*_fn)(struct rpacket*);//for C function
+		void (*_fn)(struct rpacket*,struct player*);//for C function
 		string_t lua_fn;             //for lua function
 	};
 }*cmd_handler_t;
 
-void call_handler(cmd_handler_t,struct rpacket*);
+void call_handler(cmd_handler_t,struct rpacket*,struct player*);
 
 
 

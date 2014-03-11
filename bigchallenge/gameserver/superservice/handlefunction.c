@@ -1,5 +1,5 @@
 #include "superservice.h"
-
+#include "../battleservice/map.h"
 
 void load_ply_info_cb(struct db_result *result)
 {
@@ -16,7 +16,7 @@ void load_ply_info_cb(struct db_result *result)
 
 static void load_player_info(player_t ply);
 
-void player_login(rpacket_t rpk)
+void player_login(rpacket_t rpk,player_t ply)
 {
 	string_t actname = rpk_read_string(rpk);
 	uint32_t gateident = rpk_read_uint32(rpk);
@@ -36,7 +36,32 @@ void player_login(rpacket_t rpk)
 
 
 //玩家请求登出
-void player_logout(rpacket_t rpk)
+void player_logout(rpacket_t rpk,player_t ply)
 {
 
+}
+
+
+/*请求进入战场，如果请求进入的是大地图则选择一个让玩家进入。
+* 否则进入配对系统，配对完成后进入
+*/
+void enter_battle(rpacket_t rpk,player_t ply)
+{
+	uint16_t mapid = rpk_read_uint16(rpk);
+	struct mapdefine *mapdef = get_mapdefine_byid(mapid);
+	if(mapdef){
+		if(mapdef->maptype == map_open){
+			//开放地图
+			uint32_t battleservid = get_openinstance_byid(mapid);
+			if(battleservid == 0){
+				//随机挑选一个battleservice
+			}else{
+				battleservice_t battle = get_battle_by_index((uint8_t)(battleservid >> 16));
+				uint32_t mapindex = battleservid/65536;
+				//让玩家进入battle的mapindex
+			}		
+		}else{
+			//进入配对系统
+		}
+	}
 }
