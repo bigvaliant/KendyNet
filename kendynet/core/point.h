@@ -1,7 +1,7 @@
 #ifndef _POINT_H
 #define _POINT_H
 #include <stdint.h>
-
+#include <math.h>
 struct point2D
 {
 	int32_t x;

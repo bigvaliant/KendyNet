@@ -1,8 +1,13 @@
 #include "togame.h"
 #include "common/cmd.h"
 #include "common/agentsession.h"
+#include "core/kn_string.h"
 
 toGame_t g_togame = NULL;
+string_t g_gameip = NULL;
+int32_t  g_gameport = 0;
+
+
 
 void send2game(wpacket_t wpk)
 {
@@ -33,15 +38,15 @@ static void togame_disconnected(msgdisp_t disp,sock_ident sock,const char *ip,in
 	MAKE_EMPTY_IDENT(g_togame->togame);
 }
 
-
-static void check_togame_connection(){
-
+static void togame_connect_failed(msgdisp_t disp,const char *ip,int32_t port,uint32_t reason)
+{
+	//再次发起连接尝试
+	g_togame->msgdisp->connect(g_togame->msgdisp,0,to_cstr(g_gameip),g_gameport,30*1000);
 }
 
 static void *service_main(void *ud){
     toGame_t service = (toGame_t)ud;
     while(!service->stop){
-		check_togame_connection();//检查到game的连接
         msg_loop(service->msgdisp,50);
     }
     return NULL;
@@ -51,14 +56,16 @@ static void *service_main(void *ud){
 int32_t start_togame_service(asynnet_t asynet){
 	//读取配置文件
 	toGame_t g_togame = calloc(1,sizeof(*g_togame));
-	g_togame->msgdisp = new_msgdisp(asynet,4,
+	g_togame->msgdisp = new_msgdisp(asynet,5,
 								   CB_CONNECT(togame_connect),
                                    CB_CONNECTED(togame_connected),
                                    CB_DISCNT(togame_disconnected),
-                                   CB_PROCESSPACKET(togame_processpacket)
+                                   CB_PROCESSPACKET(togame_processpacket),
+                                   CB_CONNECTFAILED(togame_connect_failed)
                                    );
 	g_togame->thd = create_thread(THREAD_JOINABLE); 
 	thread_start_run(g_togame->thd,service_main,(void*)g_togame);
+	g_togame->msgdisp->connect(g_togame->msgdisp,0,to_cstr(g_gameip),g_gameport,30*1000);
 	return 0;
 }
 

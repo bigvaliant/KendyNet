@@ -3,8 +3,6 @@
 #include <assert.h>
 #include "game/astar.h"
 #include "game/aoi.h"
-#include "core/rbtree.h"
-#include "core/kn_string.h"
 
 enum{
 	BLOCK = 65536,

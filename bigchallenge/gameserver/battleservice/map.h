@@ -2,6 +2,9 @@
 #define _MAP_H
 
 #include "core/lua_util.h"
+#include "core/rbtree.h"
+#include "core/kn_string.h"
+#include "core/point.h"
 
 void map_register2lua(lua_State *L);
 
