@@ -14,7 +14,6 @@ typedef struct toGame
 	sock_ident  togame;
 }*toGame_t;
 
-extern toGame_t g_togame;
 void send2game(wpacket_t wpk);
 
 int32_t start_togame_service(asynnet_t asynet);

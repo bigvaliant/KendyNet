@@ -9,6 +9,8 @@ DEFINE = -D_DEBUG -D_LINUX -DMQ_HEART_BEAT
 gateservice.a:\
 		gateserver/agentservice/agentservice.c\
 		gateserver/agentservice/agentservice.h\
+		gateserver/verifyservice/verifyservice.c\
+		gateserver/verifyservice/verifyservice.h\
 		gateserver/togame/togame.c\
 		gateserver/togame/togame.h
 		$(CC) $(CFLAGS) -c $^ $(INCLUDE) $(DEFINE)

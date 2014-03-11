@@ -10,8 +10,9 @@ enum{
 	//客户端到网关
 	CMD_C2GATE = 0,
 
-	CMD_C2GATE_LOGIN,   //玩家登录
-	CMD_C2GATE_CREATE,  //创建角色
+	CMD_C2GATE_LOGIN,     //玩家登录
+	CMD_C2GATE_CREATE,    //创建角色
+	CMD_C2GATE_RECONNECT, //连接短暂掉了之后的重连
 	
 	CMD_C2GATE_END,
 

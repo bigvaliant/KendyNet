@@ -3,9 +3,9 @@
 #include "common/agentsession.h"
 #include "core/kn_string.h"
 
-toGame_t g_togame = NULL;
-string_t g_gameip = NULL;
-int32_t  g_gameport = 0;
+static toGame_t g_togame = NULL;
+static string_t g_gameip = NULL;
+static int32_t  g_gameport = 0;
 
 
 
@@ -55,7 +55,7 @@ static void *service_main(void *ud){
 
 int32_t start_togame_service(asynnet_t asynet){
 	//读取配置文件
-	toGame_t g_togame = calloc(1,sizeof(*g_togame));
+	g_togame = calloc(1,sizeof(*g_togame));
 	g_togame->msgdisp = new_msgdisp(asynet,5,
 								   CB_CONNECT(togame_connect),
                                    CB_CONNECTED(togame_connected),
