@@ -13,9 +13,10 @@
 typedef struct avatarid{	
 	union{
 		struct{
-			uint32_t battleservice_id:5;        
-			uint32_t map_id:11;
-			uint32_t ojb_index:16;     
+			uint32_t battleservice_id:5; //最多允许32个battleservice       
+			uint32_t map_id:9;           //一个battleservice最大允许创建512张地图
+			uint32_t ojb_index:10;       //每张地图最多允许1023个对象
+			uint32_t check:8;            //一个简单的校验值
 		};
 		uint32_t     data;
 	};
