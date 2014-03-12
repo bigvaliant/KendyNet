@@ -16,8 +16,9 @@ static void *service_main(void *ud){
 }
 
 
-agentplayer_t new_agentplayer(agentservice_t service,sock_ident sock)
+agentplayer_t new_agentplayer(sock_ident sock)
 {
+	agentservice_t service = get_thd_agentservice();
 	int32_t id = get_id(service->_idmgr);
 	if(id == -1)
 		return NULL;
@@ -30,32 +31,39 @@ agentplayer_t new_agentplayer(agentservice_t service,sock_ident sock)
 	return player;
 }
 
-void release_agentplayer(agentservice_t service,agentplayer_t player)
+void release_agentplayer(agentplayer_t player)
 {
+	agentservice_t service = get_thd_agentservice();
 	release_id(service->_idmgr,(int32_t)player->session.sessionid);
 	player->session.data = 0;
 	player->state = agent_unusing;
 }
 
-agentplayer_t get_agentplayer(agentservice_t service,agentsession session)
+agentplayer_t get_agentplayer(agentsession session)
 {
+	agentservice_t service = get_thd_agentservice();
 	agentplayer_t ply = &service->players[session.sessionid];
 	if(ply->session.data != session.data) return NULL;
 	if(ply->state == agent_unusing) return NULL;
 	return ply;
 }
 
+void send2player(agentplayer_t ply,wpacket_t wpk)
+{
+	asyn_send(ply->con,wpk);
+}
+
 
 static void agent_connect(msgdisp_t disp,sock_ident sock,const char *ip,int32_t port)
 {
-	agentservice_t service = get_thd_agentservice();
-	agentplayer_t ply = new_agentplayer(service,sock);
+	agentplayer_t ply = new_agentplayer(sock);
 	if(!ply)
 	{
 		//关闭连接
 		asynsock_close(sock);
 	}else
 	{
+		agentservice_t service = get_thd_agentservice();
 		asynsock_set_ud(sock,(void*)ply->session.data);
 		service->msgdisp->bind(service->msgdisp,0,sock,4096,0,30*1000,0);//由系统选择poller
 	}
@@ -63,10 +71,10 @@ static void agent_connect(msgdisp_t disp,sock_ident sock,const char *ip,int32_t 
 
 static void agent_disconnected(msgdisp_t disp,sock_ident sock,const char *ip,int32_t port,uint32_t err)
 {
-	agentservice_t service = get_thd_agentservice();
+	//agentservice_t service = get_thd_agentservice();
 	agentsession session;
 	session.data = (uint32_t)asynsock_get_ud(sock);
-	agentplayer_t ply = get_agentplayer(service,session);
+	agentplayer_t ply = get_agentplayer(session);
 	if(ply){
 		if(ply->state == agent_playing || ply->state == agent_creating){
 			//通知gameserver玩家连接断开
@@ -74,15 +82,14 @@ static void agent_disconnected(msgdisp_t disp,sock_ident sock,const char *ip,int
 			wpk_write_uint16(wpk,CMD_GATE2GAME_CDISCONNECT);
 			send2game(wpk);
 		}
-		release_agentplayer(service,ply);
+		release_agentplayer(ply);
 	}
 }
 
 #define GET_AGENT_PLAYER\
-		agentservice_t service = get_thd_agentservice();\
 		agentsession session;\
 		session.data = (uint32_t)asynsock_get_ud(sock);\
-		agentplayer_t ply = get_agentplayer(service,session)
+		agentplayer_t ply = get_agentplayer(session)
 
 
 struct logincall_context{
@@ -94,18 +101,26 @@ struct logincall_context{
 
 void login_result(struct asyncall_context *_context,void *result)
 {
-	
 	struct logincall_context *context = (struct logincall_context*)_context;
 	if(result != NULL){
-		//验证成功
-	}else
-	{
+		//验证成功，发送消息到game,请求调入角色信息
+		wpacket_t wpk = wpk_create(64,0);
+		wpk_write_uint16(wpk,CMD_GATE2GAME_LOGIN);
+		wpk_write_uint32(wpk,context->session.data);
+		wpk_write_string(wpk,to_cstr(context->acctname));
+		send2game(wpk);
+	}else{
 		//验证失败
+		agentplayer_t ply = get_agentplayer(context->session);
+		if(ply){
+			wpacket_t wpk = wpk_create(64,0);
+			wpk_write_uint16(wpk,CMD_GATE2C_VERIFY_FAILED);
+			send2player(ply,wpk);
+		}
 	}
 	release_string(context->acctname);
 	release_string(context->passwd);
-	free(context);
-	
+	free(context);	
 }
 		
 
@@ -148,7 +163,7 @@ int32_t agent_processpacket(msgdisp_t disp,rpacket_t rpk)
 		else if(cmd == CMD_C2GATE_CREATE)
 			agent_cmd_create(rpk);
 	}else{
-		agentservice_t service = get_thd_agentservice();
+		//agentservice_t service = get_thd_agentservice();
 		if(cmd >= CMD_GAME2C && cmd < CMD_GAME2C_END){
 			uint16_t size = reverse_read_uint16(rpk);//这个包需要发给多少个客户端
 			//创建一个rpacket_t用于读取需要广播的客户端
@@ -162,7 +177,7 @@ int32_t agent_processpacket(msgdisp_t disp,rpacket_t rpk)
 			{
 				agentsession session;
 				session.data = rpk_read_uint32(r);
-				agentplayer_t ply = get_agentplayer(service,session);
+				agentplayer_t ply = get_agentplayer(session);
 				if(ply)	
 					asyn_send(ply->con,wpk);
 			}

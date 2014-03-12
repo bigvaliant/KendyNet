@@ -18,12 +18,12 @@ static void load_player_info(player_t ply);
 
 void player_login(rpacket_t rpk,player_t ply)
 {
-	string_t actname = rpk_read_string(rpk);
 	uint32_t gateident = rpk_read_uint32(rpk);
+	string_t actname = rpk_read_string(rpk);
 	player_t ply = find_player_by_actname(actname);
 	if(ply){
 		//对象还未销毁，重新绑定关系
-
+		
 	}else{
 		ply = create_player(actname,gateident);
 		if(!ply){

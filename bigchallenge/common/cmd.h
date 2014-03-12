@@ -30,7 +30,7 @@ enum{
 	CMD_GATE2C = 200,
 	
 	CMD_GATE2C_BUSY, //服务器繁忙
-	
+	CMD_GATE2C_VERIFY_FAILED,//帐号验证失败
 	CMD_GATE2_END,
 	
 	//游戏服到客户端	
@@ -45,6 +45,7 @@ enum{
 	CMD_GATE2GAME = 400,
 	
 	CMD_GATE2GAME_CDISCONNECT, //客户端连接断开
+	CMD_GATE2GAME_LOGIN,
 	
 	CMD_GATE2GAME_END,
 

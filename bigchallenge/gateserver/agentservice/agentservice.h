@@ -27,7 +27,9 @@ void           destroy_agentservice(agentservice_t);
 agentservice_t get_thd_agentservice();
 
 
-agentplayer_t get_agentplayer(agentservice_t service,agentsession session);
+agentplayer_t get_agentplayer(agentsession session);
+
+void send2player(agentplayer_t,wpacket_t);
 
 
 #endif
