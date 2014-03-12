@@ -37,7 +37,7 @@ void *Routine1(void *arg)
 				//lfstack_push(&mq1,&node_list1[j][i]);
                 //msgque_put(mq1,&node_list1[j][i]);
                 //while(ringque_push(mq1,&node_list1[j][i]) != 0);
-                ringque_push(mq1,(void*)1);
+                ringque_push(mq1,(void*)1);//GetSystemMs());
             }
             //sleepms(50);
         }
@@ -84,6 +84,8 @@ void *Routine3(void *arg)
 	return NULL;
 }*/
 
+uint64_t count = 0;
+
 void *Routine4(void *arg)
 {
 	cpu_set_t mask;
@@ -92,9 +94,9 @@ void *Routine4(void *arg)
     if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) < 0) {
 		fprintf(stderr, "set thread affinity failed\n");
     }	
-	uint64_t count = 0;
-	uint64_t total_count = 0;
-	uint32_t tick = GetSystemMs();
+
+	
+	//uint32_t delay = 0;
 	for( ; ; )
 	{
 		lnode *n = ringque_pop(mq1);// = lfstack_pop(&mq1);
@@ -102,15 +104,10 @@ void *Routine4(void *arg)
         //    break;
 		if(n)
 		{
+			//delay += GetSystemMs()-(uint32_t)n;
+			//delay /=2;
 			++count;
-			++total_count;
-		}
-		uint32_t now = GetSystemMs();
-		if(now - tick > 1000)
-		{
-			printf("recv:%d\n",(uint32_t)((count*1000)/(now-tick)));
-			tick = now;
-			count = 0;
+			//++total_count;
 		}
 	}
     printf("Routine4 end\n");
@@ -119,17 +116,17 @@ void *Routine4(void *arg)
 
 int main()
 {
-	//int i = 0;
-	//for( ; i < 5; ++i)
-	//{
+	int i = 0;
+	for( ; i < 5; ++i)
+	{
 		//node_list1[i] = calloc(10000000,sizeof(lnode));
 		//node_list2[i] = calloc(10000000,sizeof(lnode));
 		//node_list3[i] = calloc(10000000,sizeof(lnode));
-	//}
-	//mq1 = new_msgque(32,NULL);
+	}
+	//mq1 = new_msgque(1024,NULL);
 	//mq1.head = NULL;
 	
-	mq1 = new_ringque(65536);
+	mq1 = new_ringque(4096);
 	
 	thread_t t4 = create_thread(0);
 	thread_start_run(t4,Routine4,NULL);
@@ -142,7 +139,17 @@ int main()
 
 	//thread_t t3 = create_thread(0);
 	//thread_start_run(t3,Routine3,NULL);
-
+	uint32_t tick = GetSystemMs();
+	for(;;){
+		uint32_t now = GetSystemMs();
+		if(now - tick > 1000)
+		{
+			printf("recv:%d\n",(uint32_t)((count*1000)/(now-tick)));
+			tick = now;
+			count = 0;
+		}
+		sleepms(1);
+	}
 	getchar();
 	return 0;
 }
