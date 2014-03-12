@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+#include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "core/kendynet.h"
@@ -19,6 +21,12 @@ ringque_t  mq1;
 //lockfree_stack mq1;
 void *Routine1(void *arg)
 {
+	cpu_set_t mask;
+	CPU_ZERO(&mask);
+    CPU_SET(0, &mask);
+    if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) < 0) {
+		fprintf(stderr, "set thread affinity failed\n");
+    }	
     for(;;){
         int j = 0;
         for(; j < 5;++j)
@@ -78,6 +86,12 @@ void *Routine3(void *arg)
 
 void *Routine4(void *arg)
 {
+	cpu_set_t mask;
+	CPU_ZERO(&mask);
+    CPU_SET(2, &mask);
+    if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) < 0) {
+		fprintf(stderr, "set thread affinity failed\n");
+    }	
 	uint64_t count = 0;
 	uint64_t total_count = 0;
 	uint32_t tick = GetSystemMs();
