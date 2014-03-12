@@ -2,6 +2,7 @@
 #include "common/cmd.h"
 #include "common/agentsession.h"
 #include "core/kn_string.h"
+#include "agentservice/agentservice.h"
 
 static toGame_t g_togame = NULL;
 static string_t g_gameip = NULL;
@@ -14,11 +15,23 @@ void send2game(wpacket_t wpk)
 	asyn_send(g_togame->togame,wpk);
 }
 
+agentservice_t get_agent_byindex(uint8_t);
+
 int32_t togame_processpacket(msgdisp_t disp,rpacket_t rpk)
 {
 	uint16_t cmd = rpk_peek_uint16(rpk);
 	if(cmd >= CMD_GAME2C && cmd < CMD_GAME2C_END){
-		//转发到各agentservice
+		if(cmd == CMD_GAME2GATE_BUSY){
+			agentsession session;
+			session.data = reverse_read_uint32(rpk);
+			agentservice_t agent = get_agent_byindex(session.aid);
+			if(agent){
+				if(0 == send_msg(NULL,agent->msgdisp,(msg_t)rpk))
+					return 0;
+			}
+		}else{
+		
+		}
 	}
 	return 1;
 }

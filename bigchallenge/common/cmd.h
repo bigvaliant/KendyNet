@@ -51,6 +51,9 @@ enum{
 
 	//游戏服到网关
 	CMD_GAME2GATE = 500,
+	
+	CMD_GAME2GATE_BUSY,
+	
 	CMD_GAME2GATE_END,
 	
 	MAX_CMD = 1024

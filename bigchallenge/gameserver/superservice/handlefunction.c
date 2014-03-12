@@ -28,6 +28,10 @@ void player_login(rpacket_t rpk,player_t ply)
 		ply = create_player(actname,gateident);
 		if(!ply){
 			//通知玩家系统繁忙
+			wpacket_t wpk = wpk_create(64,0);
+			wpk_write_uint16(wpk,CMD_GAME2GATE_BUSY);
+			wpk_write_uint32(wpk.gateident);
+			send2gate(wpk);
 			return;
 		}
 		load_player_info(ply);//从数据库导入玩家信息

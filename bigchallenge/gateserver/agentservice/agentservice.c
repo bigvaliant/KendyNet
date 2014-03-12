@@ -152,6 +152,20 @@ static void agent_cmd_create(rpacket_t rpk)
 	}	
 }
 
+static inline void agent_game_busy(rpacket_t rpk)
+{
+	rpk_read_uint16(rpk);//丢掉命令码
+	agentsession session;
+	session.data = rpk_read_uint32(rpk);
+	agentplayer_t ply = get_agentplayer(session);
+	if(ply){
+		wpacket_t wpk = wpk_create(64,0);
+		wpk_write_uint16(wpk,CMD_GATE2C_BUSY);
+		send2player(ply,wpk);
+		asynsock_close(ply->con);
+	}	
+}
+
 
 int32_t agent_processpacket(msgdisp_t disp,rpacket_t rpk)
 {
@@ -182,7 +196,12 @@ int32_t agent_processpacket(msgdisp_t disp,rpacket_t rpk)
 					asyn_send(ply->con,wpk);
 			}
 			rpk_destroy(&r);
-		}else{
+		}else if(cmd >= CMD_GAME2GATE && cmd < CMD_GAME2GATE_END)
+		{
+			if(cmd == CMD_GAME2GATE_BUSY)
+				agent_game_busy(rpk);
+		}
+		else if(cmd >= CMD_GAME2C && cmd < CMD_GAME2C_END){
 			sock_ident sock = TO_SOCK(MSG_IDENT(rpk));
 			GET_AGENT_PLAYER;
 			if(ply && ply->state == agent_playing)
