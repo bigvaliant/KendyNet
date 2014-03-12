@@ -11,9 +11,9 @@
 lnode *node_list1[5];
 lnode *node_list2[5];
 lnode *node_list3[5];
-msgque_t mq1;
+//msgque_t mq1;
 
-//ringque_t  mq1;
+ringque_t  mq1;
 
 
 //lockfree_stack mq1;
@@ -27,11 +27,11 @@ void *Routine1(void *arg)
             for(; i < 10000000; ++i)
             {
 				//lfstack_push(&mq1,&node_list1[j][i]);
-                msgque_put(mq1,&node_list1[j][i]);
+                //msgque_put(mq1,&node_list1[j][i]);
                 //while(ringque_push(mq1,&node_list1[j][i]) != 0);
-                
+                ringque_push(mq1,(void*)1);
             }
-            sleepms(50);
+            //sleepms(50);
         }
     }
     printf("Routine1 end\n");
@@ -83,9 +83,9 @@ void *Routine4(void *arg)
 	uint32_t tick = GetSystemMs();
 	for( ; ; )
 	{
-		lnode *n ;//= ringque_pop(mq1);// = lfstack_pop(&mq1);
-		if(0 != msgque_get(mq1,&n,50))
-            break;
+		lnode *n = ringque_pop(mq1);// = lfstack_pop(&mq1);
+		//if(0 != msgque_get(mq1,&n,50))
+        //    break;
 		if(n)
 		{
 			++count;
@@ -105,17 +105,17 @@ void *Routine4(void *arg)
 
 int main()
 {
-	int i = 0;
-	for( ; i < 5; ++i)
-	{
-		node_list1[i] = calloc(10000000,sizeof(lnode));
+	//int i = 0;
+	//for( ; i < 5; ++i)
+	//{
+		//node_list1[i] = calloc(10000000,sizeof(lnode));
 		//node_list2[i] = calloc(10000000,sizeof(lnode));
 		//node_list3[i] = calloc(10000000,sizeof(lnode));
-	}
-	mq1 = new_msgque(32,NULL);
+	//}
+	//mq1 = new_msgque(32,NULL);
 	//mq1.head = NULL;
 	
-	//mq1 = new_ringque(1000000);
+	mq1 = new_ringque(65536);
 	
 	thread_t t4 = create_thread(0);
 	thread_start_run(t4,Routine4,NULL);
