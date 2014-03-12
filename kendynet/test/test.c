@@ -65,9 +65,13 @@ int main()
 		lua_pop(L,1);
 		printf("%s\n",error);
 	}
-	testObj(L);
-	testcall(L);
-	testArray(L);
+	//testObj(L);
+	//testcall(L);
+	//testArray(L);
+	luaObject_t obj = GETGLOBAL_OBJECT(L,"toredis");
+	const char *ip = GET_OBJ_FIELD(obj,"ip",const char*,lua_tostring);
+	printf("%s\n",ip);
+	
 	
 	/*int a;	
 	if(0 != CALL_LUA_FUNC1(L,"create_socket",1,PUSH_LUSRDATA(L,&a)))

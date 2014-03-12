@@ -272,5 +272,28 @@ void        release_luaObj(luaObject_t);
             }\
         }while(0)
 
+#define GETGLOBAL_NUMBER(LUASTATE,NAME)\
+		({\
+			int __result;\
+			lua_getglobal(LUASTATE,NAME);\
+			do __result = lua_tonumber(LUASTATE,-1);\
+			while(0);\
+		__result;})
+		
+#define GETGLOBAL_STRING(LUASTATE,NAME)\
+		({\
+			const char *__result;\
+			lua_getglobal(LUASTATE,NAME);\
+			do __result = lua_tostring(LUASTATE,-1);\
+			while(0);\
+		__result;})
+		
+#define GETGLOBAL_OBJECT(LUASTATE,NAME)\
+		({\
+			luaObject_t __result;\
+			lua_getglobal(LUASTATE,NAME);\
+			do __result = create_luaObj(LUASTATE,-1);\
+			while(0);\
+		__result;})				
 
 #endif
