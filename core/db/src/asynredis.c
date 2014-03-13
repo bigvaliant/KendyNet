@@ -4,9 +4,13 @@ void dorequest(struct redis_worker *worker,db_request_t req)
 {
 	while(1){
 		redisContext *c = worker->context; 
-		redisReply *r = redisCommand(c,req->query_str);
+		redisReply *r = redisCommand(c,to_cstr(req->query_str));
 		if(r){
-			if(req->type == db_get){
+			if(req->callback){
+				db_result_t result = new_dbresult(db_redis,r,req->callback,req->ud);
+				asyndb_sendresult(req->sender,result);
+			}			
+			/*if(req->type == db_get){
 				db_result_t result = NULL;	
 				if(r->type == REDIS_REPLY_NIL)
 				{
@@ -26,7 +30,7 @@ void dorequest(struct redis_worker *worker,db_request_t req)
 						result = new_dbresult(db_redis,r,req->callback,0,req->ud);
 					asyndb_sendresult(req->sender,result);
 				}		
-			}
+			}*/
 			break;
 		}else
 		{
@@ -81,7 +85,7 @@ int32_t redis_connectdb(asyndb_t asyndb,const char *ip,int32_t port)
 int32_t redis_request(asyndb_t asyndb,db_request_t req)
 {
 	if(!asyndb) return -1;
-	if(req->type == db_get && !req->callback) return -1;
+	//if(req->type == db_get && !req->callback) return -1;
 	struct asynredis *redis = (struct asynredis*)asyndb;
 	if(0 != msgque_put_immeda(redis->mq,(lnode*)req))
 	{	

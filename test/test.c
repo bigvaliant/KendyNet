@@ -60,7 +60,7 @@ int main()
 {
 	lua_State *L = luaL_newstate();
 	luaL_openlibs(L);
-	if (luaL_dofile(L,"kendynet/test/test.lua")) {
+	if (luaL_dofile(L,"test/test.lua")) {
 		const char * error = lua_tostring(L, -1);
 		lua_pop(L,1);
 		printf("%s\n",error);
@@ -69,8 +69,13 @@ int main()
 	//testcall(L);
 	//testArray(L);
 	luaObject_t obj = GETGLOBAL_OBJECT(L,"toredis");
-	const char *ip = GET_OBJ_FIELD(obj,"ip",const char*,lua_tostring);
-	printf("%s\n",ip);
+	LUAOBJECT_ENUM(obj){
+		const char *value = lua_tostring(L,-1);
+		const char *key = lua_tostring(L,-2);
+		printf("%s,%s\n",key,value);
+	}
+	//const char *ip = GET_OBJ_FIELD(obj,"ip",const char*,lua_tostring);
+	//printf("%s\n",ip);
 	
 	
 	/*int a;	

@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include "llist.h"
 #include "asynnet/msgdisp.h"
+#include "kn_string.h"
 
 struct db_result;
 typedef void (*DB_CALLBACK)(struct db_result*);
@@ -29,20 +30,13 @@ enum{
 	db_mysql,
 };
 
-enum
-{
-	db_get = 1,
-	db_set = 2
-};
-
 typedef struct db_request
 {
 	lnode        node;     
 	DB_CALLBACK  callback;      //操作完成后的回调
 	void        *ud;
-	char*        query_str;     //操作请求串
+	string_t     query_str;     //操作请求串
 	msgdisp_t    sender;        //请求者，操作结果直接返回给请求者
-	uint8_t      type; 
 }*db_request_t;
 
 
@@ -51,7 +45,6 @@ typedef struct db_result
 	struct msg  base;
 	DB_CALLBACK callback;
 	void       *result_set;
-	int32_t     err;
 	void        *ud;
 	uint8_t     dbtype;
 }*db_result_t;
@@ -68,15 +61,12 @@ typedef struct asyndb
 asyndb_t new_asyndb(uint8_t dbtype);
 void     free_asyndb(asyndb_t);
 
-db_result_t new_dbresult(uint8_t,void*,DB_CALLBACK,int32_t,void*);
+db_result_t new_dbresult(uint8_t,void*,DB_CALLBACK,void*);
 void     free_dbresult(db_result_t);
 
-db_request_t  new_dbrequest(uint8_t type,const char*,DB_CALLBACK,void*,msgdisp_t);
+db_request_t  new_dbrequest(const char*,DB_CALLBACK,void*,msgdisp_t);
 void     free_dbrequest(db_request_t);
 
 void  asyndb_sendresult(msgdisp_t,db_result_t);
-
-//db_result_t rpk_read_dbresult(rpacket_t r);
-
 
 #endif

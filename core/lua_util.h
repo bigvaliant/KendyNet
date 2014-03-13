@@ -161,11 +161,11 @@
 
 
 			
-#include "core/refbase.h"
+//#include "core/refbase.h"
 
 typedef struct luaObject
 {
-	struct refbase base;
+	//struct refbase base;
 	lua_State      *L;
 	int 		   rindex;
 }*luaObject_t;
@@ -294,6 +294,14 @@ void        release_luaObj(luaObject_t);
 			lua_getglobal(LUASTATE,NAME);\
 			do __result = create_luaObj(LUASTATE,-1);\
 			while(0);\
-		__result;})				
+		__result;})
 
+#define LUAOBJECT_ENUM(OBJ)\
+			for(lua_rawgeti(OBJ->L,LUA_REGISTRYINDEX,OBJ->rindex),lua_pushnil(OBJ->L);\
+				({\
+					int __result;\
+					do __result = lua_next(OBJ->L,-2);\
+					while(0);\
+					if(!__result)lua_pop(OBJ->L,2);\
+					__result;});lua_pop(OBJ->L,1))
 #endif
