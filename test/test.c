@@ -74,8 +74,8 @@ int main()
 		const char *key = lua_tostring(L,-2);
 		printf("%s,%s\n",key,value);
 	}
-	//const char *ip = GET_OBJ_FIELD(obj,"ip",const char*,lua_tostring);
-	//printf("%s\n",ip);
+	const char *ip = GET_OBJ_FIELD(obj,"ip",const char*,lua_tostring);
+	printf("%s\n",ip);
 	
 	
 	/*int a;	

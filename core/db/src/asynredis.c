@@ -1,4 +1,6 @@
 #include "asynredis.h"
+#include "systime.h"
+#include "log.h"
 
 void dorequest(struct redis_worker *worker,db_request_t req)
 {
@@ -35,10 +37,15 @@ void dorequest(struct redis_worker *worker,db_request_t req)
 		}else
 		{
 			redisFree(c);
-			worker->context = redisConnect(worker->ip,worker->port);
-		}
-
-	 //if(r) freeReplyObject(r);	
+			uint32_t trytime = 0;
+			while((worker->context = redisConnect(worker->ip,worker->port)) == NULL){
+				if(++trytime >= 64){
+					SYS_LOG(LOG_ERROR,"to redis %s:%d error\n",worker->ip,worker->port);
+					break;
+				}
+				sleepms(50);
+			}
+		}	
 	}
 	free_dbrequest(req);
 }

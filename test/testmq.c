@@ -1,4 +1,4 @@
-#define _GNU_SOURCE
+//#define _GNU_SOURCE
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,12 +21,12 @@ ringque_t  mq1;
 //lockfree_stack mq1;
 void *Routine1(void *arg)
 {
-	cpu_set_t mask;
-	CPU_ZERO(&mask);
-    CPU_SET(0, &mask);
-    if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) < 0) {
-		fprintf(stderr, "set thread affinity failed\n");
-    }	
+	//cpu_set_t mask;
+	//CPU_ZERO(&mask);
+    //CPU_SET(0, &mask);
+    //if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) < 0) {
+	//	fprintf(stderr, "set thread affinity failed\n");
+    //}	
     for(;;){
         int j = 0;
         for(; j < 5;++j)
@@ -88,12 +88,12 @@ uint64_t count = 0;
 
 void *Routine4(void *arg)
 {
-	cpu_set_t mask;
-	CPU_ZERO(&mask);
-    CPU_SET(2, &mask);
-    if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) < 0) {
-		fprintf(stderr, "set thread affinity failed\n");
-    }	
+	//cpu_set_t mask;
+	//CPU_ZERO(&mask);
+    //CPU_SET(3, &mask);
+    //if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) < 0) {
+	//	fprintf(stderr, "set thread affinity failed\n");
+    //}	
 
 	
 	//uint32_t delay = 0;
@@ -126,7 +126,7 @@ int main()
 	//mq1 = new_msgque(1024,NULL);
 	//mq1.head = NULL;
 	
-	mq1 = new_ringque(4096);
+	mq1 = new_ringque(65536);
 	
 	thread_t t4 = create_thread(0);
 	thread_start_run(t4,Routine4,NULL);

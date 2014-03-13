@@ -71,6 +71,8 @@ luanet:luanet.c kendynet.a
 	$(CC) $(CFLAGS) -c $(SHARED) luanet.c $(INCLUDE) $(DEFINE) 
 	$(CC) $(SHARED) -o luanet.so luanet.o kendynet.a $(LDFLAGS) $(DEFINE)
 	rm -f *.o
+testredis2:kendynet.a $(TESTDIR)/testredis2.c $(TESTDIR)/testcommon.h
+	$(CC) $(CFLAGS) -o testredis2 $(TESTDIR)/testredis2.c kendynet.a deps/hiredis/libhiredis.a  $(INCLUDE) $(LDFLAGS) $(DEFINE)
 testredis:kendynet.a $(TESTDIR)/testredis.c $(TESTDIR)/testcommon.h
 	$(CC) $(CFLAGS) -o testredis $(TESTDIR)/testredis.c kendynet.a deps/hiredis/libhiredis.a  $(INCLUDE) $(LDFLAGS) $(DEFINE)
 packet:kendynet.a $(TESTDIR)/testpacket.c
