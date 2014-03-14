@@ -9,8 +9,8 @@
 #include "common_define.h"
 #include <assert.h>
 
-/*
-#define CARGO_CAPACITY 64
+
+#define CARGO_CAPACITY 128
 
 struct cargo{
 	void *cargo[CARGO_CAPACITY];
@@ -69,9 +69,10 @@ static inline void *ringque_pop(ringque_t que)
 {
 	if(que->ridx == que->widx)
 		return NULL;
-	//printf("h\n");			
+	_FENCE;					
 	struct cargo *cargo = &que->data[que->ridx];
 	if(unlikely(cargo->size == 0)){	
+		_FENCE;	
 		que->ridx = (que->ridx+1)&que->indexmask;
 		if(que->ridx == que->widx)
 			return NULL;		
@@ -86,8 +87,9 @@ static inline void *ringque_pop(ringque_t que)
 	cargo->cargo[CARGO_CAPACITY-cargo->size] = NULL;
 	--cargo->size;
 	return ret;		
-}*/
+}
 
+/*
 typedef struct ringque{	
 	volatile uint32_t ridx;
 	uint32_t maxsize;
@@ -137,6 +139,6 @@ static inline void *ringque_pop(ringque_t que)
 	que->ridx = (que->ridx+1)%que->maxsize;
 	return ret;			
 }
-
+*/
 
 #endif

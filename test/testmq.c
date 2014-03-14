@@ -126,7 +126,7 @@ int main()
 	//mq1 = new_msgque(1024,NULL);
 	//mq1.head = NULL;
 	
-	mq1 = new_ringque(65536);
+	mq1 = new_ringque(65536/2);
 	
 	thread_t t4 = create_thread(0);
 	thread_start_run(t4,Routine4,NULL);
