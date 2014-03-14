@@ -103,6 +103,7 @@ testasyncall:kendynet.a $(TESTDIR)/testasyncall.c $(TESTDIR)/testcommon.h
 	$(CC) $(CFLAGS) -o testasyncall $(TESTDIR)/testasyncall.c kendynet.a deps/hiredis/libhiredis.a  $(INCLUDE) $(LDFLAGS) $(DEFINE)
 testlog:kendynet.a $(TESTDIR)/testlog.c $(TESTDIR)/testcommon.h
 	$(CC) $(CFLAGS) -o testlog $(TESTDIR)/testlog.c kendynet.a deps/hiredis/libhiredis.a  $(INCLUDE) $(LDFLAGS) $(DEFINE)	
-
+ringque:kendynet.a $(TESTDIR)/testringq.c
+	$(CC) $(CFLAGS) -o ringque $(TESTDIR)/testringq.c kendynet.a $(INCLUDE) $(LDFLAGS) $(DEFINE)
 	
 	
