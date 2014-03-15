@@ -9,39 +9,17 @@ static void request_destroyer(void *ptr)
 
 void dorequest(struct asynredis *redis,db_request_t req)
 {
-	while(1){
-		redisContext *c = redis->context; 
-		redisReply *r = redisCommand(c,to_cstr(req->query_str));
+	while(redis->context){
+		redisReply *r = redisCommand(redis->context,to_cstr(req->query_str));
 		if(r){
 			if(req->callback){
 				db_result_t result = new_dbresult(db_redis,r,req->callback,req->ud);
 				asyndb_sendresult(req->sender,result);
 			}			
-			/*if(req->type == db_get){
-				db_result_t result = NULL;	
-				if(r->type == REDIS_REPLY_NIL)
-				{
-					result = new_dbresult(db_redis,r,req->callback,-1,req->ud);
-				}else
-				{
-					result = new_dbresult(db_redis,r,req->callback,0,req->ud);
-				}	
-				asyndb_sendresult(req->sender,result);
-			}else if(req->type == db_set){
-				if(req->callback){
-					//需要result
-					db_result_t result = NULL;
-					if(!(r->type == REDIS_REPLY_STATUS && strcasecmp(r->str,"OK") == 0))
-						result = new_dbresult(db_redis,r,req->callback,-1,req->ud);
-					else
-						result = new_dbresult(db_redis,r,req->callback,0,req->ud);
-					asyndb_sendresult(req->sender,result);
-				}		
-			}*/
 			break;
 		}else
 		{
-			redisFree(c);
+			redisFree(redis->context);
 			uint32_t trytime = 0;
 			while((redis->context = redisConnect(redis->ip,redis->port)) == NULL){
 				if(++trytime >= 64){
@@ -68,7 +46,7 @@ static void *worker_main(void *ud){
     return NULL;
 }
 
-int32_t redis_request(asyndb_t asyndb,db_request_t req)
+int32_t redis_asyn_request(asyndb_t asyndb,db_request_t req)
 {
 	if(!asyndb) return -1;
 	//if(req->type == db_get && !req->callback) return -1;
@@ -80,6 +58,26 @@ int32_t redis_request(asyndb_t asyndb,db_request_t req)
 		return -1;
 	}
 	return 0;
+}
+
+db_result_t redis_sync_request(struct asyndb *asyndb,const char *req)
+{
+	struct asynredis *redis = (struct asynredis*)asyndb;
+	if(!redis || !redis->context)
+		return NULL;
+	redisReply *r = redisCommand(redis->context,req);
+	if(!r){
+		redisFree(redis->context);
+		uint32_t trytime = 0;
+		while((redis->context = redisConnect(redis->ip,redis->port)) == NULL){
+			if(++trytime >= 64){
+				SYS_LOG(LOG_ERROR,"to redis %s:%d error\n",redis->ip,redis->port);
+				return NULL;
+			}
+			sleepms(50);
+		}
+	}
+	return new_dbresult(db_redis,r,NULL,NULL);		
 }
 
 void    redis_destroy(asyndb_t asyndb)
@@ -101,7 +99,8 @@ asyndb_t redis_new(const char *ip,int32_t port)
 	}
 	struct asynredis *redis = calloc(1,sizeof(*redis));
 	redis->mq =  new_msgque(32,request_destroyer);
-	redis->base.request = redis_request;
+	redis->base.asyn_request = redis_asyn_request;
+	redis->base.sync_request = redis_sync_request;
 	redis->base.destroy_function = redis_destroy;	
 	redis->context = c;
 	redis->worker = create_thread(THREAD_JOINABLE);
