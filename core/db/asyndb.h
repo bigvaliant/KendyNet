@@ -52,13 +52,13 @@ typedef struct db_result
 
 typedef struct asyndb
 {
-	 int32_t (*connectdb)(struct asyndb*,const char *ip,int32_t port);
-	 int32_t (*request)(struct asyndb*,db_request_t);
+	 int32_t (*asyn_request)(struct asyndb*,db_request_t);
+	 db_result_t (*sync_request)(struct asyndb*,const char *req);
 	 void    (*destroy_function)(struct asyndb*);
 }*asyndb_t;
 
 
-asyndb_t new_asyndb(uint8_t dbtype);
+asyndb_t new_asyndb(uint8_t dbtype,const char *ip,int32_t port);
 void     free_asyndb(asyndb_t);
 
 db_result_t new_dbresult(uint8_t,void*,DB_CALLBACK,void*);

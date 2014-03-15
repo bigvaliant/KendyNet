@@ -13,10 +13,10 @@ void request_destroyer(void *ptr)
 	free_dbrequest((db_request_t)ptr);
 }
 
-asyndb_t new_asyndb(uint8_t dbtype)
+asyndb_t new_asyndb(uint8_t dbtype,const char *ip,int32_t port)
 {
 	if(dbtype == db_redis){
-		return redis_new();
+		return redis_new(ip,port);
 	}else
 		return NULL;
 }
