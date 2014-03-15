@@ -26,11 +26,11 @@
 
 struct asyncall_context;
 //异步调用返回后的回调函数
-typedef void (*fn_asyncall_result)(struct asyncall_context*,void *result);
 
 typedef struct asyncall_context{
 	msgdisp_t          caller;	
-	fn_asyncall_result fn_result;
+	void               (*fn_result)(struct asyncall_context*,void *result);
+	void               (*fn_free)(struct asyncall_context*);
 	void*              result;
 }asyncall_context,*asyncall_context_t;
 
@@ -51,8 +51,8 @@ typedef struct msg_asynresult{
 }msg_asynresult,*msg_asynresult_t;
 
 
-//不关心返回值的时候sender,asyncall_context_t,fn_asyncall_result可以为NULL
-int32_t asyncall(msgdisp_t sender,msgdisp_t recver,fn_asyncall,asyncall_context_t,fn_asyncall_result,...);
+//最大支持8个参数,不关心返回值的时候sender,asyncall_context_t,fn_asyncall_result可以为NULL
+int32_t asyncall(msgdisp_t sender,msgdisp_t recver,fn_asyncall,asyncall_context_t,...);
 
 int32_t asynreturn(asyncall_context_t,void *result);
 

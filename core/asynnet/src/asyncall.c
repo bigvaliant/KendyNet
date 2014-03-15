@@ -3,6 +3,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+void msg_destroyer(void *ud);
+
 int32_t asynreturn(asyncall_context_t context,void *result)
 {
 	msg_asynresult_t msg = calloc(1,sizeof(*msg));
@@ -10,24 +12,24 @@ int32_t asynreturn(asyncall_context_t context,void *result)
 	msg->context = context;
 	if(0 != send_msg(NULL,context->caller,(msg_t)msg))
 	{
-		free(msg);
+		msg_destroyer(msg);
 		return -1;
 	}
 	return 0;	
 }
 
 int32_t asyncall(msgdisp_t sender,msgdisp_t recver,
-				 fn_asyncall fn_call,asyncall_context_t context,fn_asyncall_result fn_result,...)
+				 fn_asyncall fn_call,asyncall_context_t context,...)
 {
 	if(!recver || ! fn_call) return -1;
-	void *param[4];
+	void *param[8];
 	uint8_t c = 0;
 	va_list argptr;
-	va_start(argptr,fn_result);
+	va_start(argptr,context);
 	do{
 		void *tmp = va_arg(argptr,void*);
 		if(tmp == NULL) break;
-		if(c > 4) return -1;
+		if(c > 8) return -1;
 		param[c++] = tmp;
 	}while(1);
 
@@ -36,7 +38,6 @@ int32_t asyncall(msgdisp_t sender,msgdisp_t recver,
 	msg->context = context;
 	msg->fn_call = fn_call;
 	if(msg->context){ 
-		msg->context->fn_result = fn_result;
 		msg->context->caller = sender;
 	}
 	if(c > 0){

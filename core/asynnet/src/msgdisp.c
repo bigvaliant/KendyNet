@@ -19,6 +19,20 @@ void msg_destroyer(void *ud)
         wpk_destroy(&rpk);
     }else if(MSG_TYPE(msg) == MSG_DB_RESULT)
         free_dbresult((db_result_t)msg);
+    else if(MSG_TYPE(msg) == MSG_ASYNCALL)
+    {
+		msg_asyncall_t ascall = (msg_asyncall_t)msg;
+		if(ascall->context && ascall->context->fn_free)
+			ascall->context->fn_free(ascall->context);
+		free(msg);
+	}
+    else if(MSG_TYPE(msg) == MSG_ASYNRESULT)
+    {
+		msg_asynresult_t asresult = (msg_asynresult_t)msg;
+		if(asresult->context && asresult->context->fn_free)
+			asresult->context->fn_free(asresult->context);
+		free(msg);
+	}	
     else
         free(msg);
 }
