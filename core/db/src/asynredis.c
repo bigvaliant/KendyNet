@@ -49,7 +49,6 @@ static void *worker_main(void *ud){
 int32_t redis_asyn_request(asyndb_t asyndb,db_request_t req)
 {
 	if(!asyndb) return -1;
-	//if(req->type == db_get && !req->callback) return -1;
 	struct asynredis *redis = (struct asynredis*)asyndb;
 	if(0 != msgque_put_immeda(redis->mq,(lnode*)req))
 	{	

@@ -8,18 +8,6 @@
 #include "llist.h"
 #include "sync.h"
 
-/*
-struct redis_worker
-{
-	lnode           node;
-	thread_t        worker;
-	volatile int8_t stop; 
-	redisContext   *context;
-	msgque_t        mq;
-	char            ip[32];
-	int32_t         port;
-};*/
-
 struct asynredis
 {
 	struct asyndb   base;
