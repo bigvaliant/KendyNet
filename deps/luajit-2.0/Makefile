@@ -15,7 +15,7 @@
 
 MAJVER=  2
 MINVER=  0
-RELVER=  2
+RELVER=  3
 VERSION= $(MAJVER).$(MINVER).$(RELVER)
 ABIVER=  5.1
 
@@ -73,7 +73,7 @@ SYMLINK= ln -sf
 INSTALL_X= install -m 0755
 INSTALL_F= install -m 0644
 UNINSTALL= $(RM)
-LDCONFIG= ldconfig -n -ltcmalloc
+LDCONFIG= ldconfig -n
 SED_PC= sed -e "s|^prefix=.*|prefix=$(PREFIX)|" \
             -e "s|^multilib=.*|multilib=$(MULTILIB)|"
 
