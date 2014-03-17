@@ -112,40 +112,40 @@
 			do{\
 				lua_newtable(LUASTATE);\
 				VAL1;\
-				lua_rawseti(L,-2,1);\
+				lua_rawseti(LUASTATE,-2,1);\
 			}while(0);
 			
 #define PUSH_TABLE2(LUASTATE,VAL1,VAL2)\
 			do{\
 				lua_newtable(LUASTATE);\
 				VAL1;\
-				lua_rawseti(L,-2,1);\
+				lua_rawseti(LUASTATE,-2,1);\
 				VAL2;\
-				lua_rawseti(L,-2,2);\
+				lua_rawseti(LUASTATE,-2,2);\
 			}while(0);
 			
 #define PUSH_TABLE3(LUASTATE,VAL1,VAL2,VAL3)\
 			do{\
 				lua_newtable(LUASTATE);\
 				VAL1;\
-				lua_rawseti(L,-2,1);\
+				lua_rawseti(LUASTATE,-2,1);\
 				VAL2;\
-				lua_rawseti(L,-2,2);\
+				lua_rawseti(LUASTATE,-2,2);\
 				VAL3;\
-				lua_rawseti(L,-2,3);\
+				lua_rawseti(LUASTATE,-2,3);\
 			}while(0);
 
 #define PUSH_TABLE4(LUASTATE,VAL1,VAL2,VAL3,VAL4)\
 			do{\
 				lua_newtable(LUASTATE);\
 				VAL1;\
-				lua_rawseti(L,-2,1);\
+				lua_rawseti(LUASTATE,-2,1);\
 				VAL2;\
-				lua_rawseti(L,-2,2);\
+				lua_rawseti(LUASTATE,-2,2);\
 				VAL3;\
-				lua_rawseti(L,-2,3);\
+				lua_rawseti(LUASTATE,-2,3);\
 				VAL4;\
-				lua_rawseti(L,-2,4);\
+				lua_rawseti(LUASTATE,-2,4);\
 			}while(0);
 			
 #define GET_ARRAY(LUASTATE,IDX,ARRAY,POP)\
@@ -154,7 +154,7 @@
 				int i = 1;\
 				for(; i <= len; ++i)\
 				{\
-					lua_rawgeti(L,IDX-i+1,i);\
+					lua_rawgeti(LUASTATE,IDX-i+1,i);\
 					ARRAY[i-1] = POP(LUASTATE,-1);\
 				}\
 			}while(0);	
