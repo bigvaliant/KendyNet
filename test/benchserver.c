@@ -34,7 +34,7 @@ void accept_client(SOCK s,struct sockaddr_in *addr_remote,void*ud)
 	struct connection *c = new_conn(s,1);
 	client_come(c);
 	struct netservice *tcpserver = (struct netservice *)ud;
-	tcpserver->bind(tcpserver,c,on_process_packet,client_go,0,NULL,0,NULL);
+	tcpserver->bind(tcpserver,c,65536,on_process_packet,client_go,0,NULL,0,NULL);
 }
 
 

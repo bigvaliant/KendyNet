@@ -22,7 +22,7 @@ void on_connect(SOCK s,struct sockaddr_in *addr_remote, void *ud,int err)
         struct connection * con = new_conn(s,1);
         add_client(con);
         struct netservice *tcpclient = (struct netservice *)ud;
-		tcpclient->bind(tcpclient,con,on_process_packet,remove_client
+		tcpclient->bind(tcpclient,con,65536,on_process_packet,remove_client
 						,0,NULL,0,NULL);
         wpacket_t wpk = NEW_WPK(send_size);
         wpk_write_binary(wpk,(void*)msg,send_size);
