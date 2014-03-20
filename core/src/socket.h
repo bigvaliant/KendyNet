@@ -77,10 +77,26 @@ int32_t raw_recv(socket_t s,st_io *io_req,uint32_t *err_code);
 
 
 SOCK new_socket_wrapper();
-void acquire_socket_wrapper(SOCK s);
-void release_socket_wrapper(SOCK s);
-struct socket_wrapper *get_socket_wrapper(SOCK s);
-int32_t get_fd(SOCK s);
+
+static inline void acquire_socket_wrapper(SOCK s)
+{
+	ref_increase(&((struct socket_wrapper *)s)->ref);
+}
+
+static inline void release_socket_wrapper(SOCK s)
+{
+	ref_decrease(&((struct socket_wrapper *)s)->ref);
+}
+
+static inline struct socket_wrapper *get_socket_wrapper(SOCK s)
+{
+	return (struct socket_wrapper *)s;
+}
+
+static inline int32_t get_fd(SOCK s)
+{
+	return ((struct socket_wrapper *)s)->fd;
+}
 
 void   shutdown_recv(socket_t s);
 void   shutdown_send(socket_t s);

@@ -29,29 +29,6 @@ SOCK new_socket_wrapper()
 	return (SOCK)sw;
 }
 
-void acquire_socket_wrapper(SOCK s)
-{
-	struct socket_wrapper *sw = (struct socket_wrapper *)s;
-	ref_increase(&sw->ref);
-}
-
-void release_socket_wrapper(SOCK s)
-{
-	struct socket_wrapper *sw = (struct socket_wrapper *)s;
-	ref_decrease(&sw->ref);
-}
-
-struct socket_wrapper *get_socket_wrapper(SOCK s)
-{
-	return (struct socket_wrapper *)s;
-}
-
-int32_t get_fd(SOCK s)
-{
-	struct socket_wrapper *sw = (struct socket_wrapper *)s;
-	return sw->fd;
-}
-
 void process_connect(socket_t s)
 {
     int err = 0;
