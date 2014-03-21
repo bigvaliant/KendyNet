@@ -53,12 +53,15 @@ kendynet.a: \
 		$(CC) $(CFLAGS) -c $^ $(INCLUDE) $(DEFINE)
 		ar -rc kendynet.a *.o
 		rm -f *.o
+		cp kendynet.a ../bigchallenge
 game.a:\
 		game/src/astar.c\
 		game/src/aoi.c
 		$(CC) $(CFLAGS) -c $^ $(INCLUDE) $(DEFINE)
 		ar -rc game.a *.o
-		rm -f *.o	
+		rm -f *.o
+		cp game.a ../bigchallenge
+			
 singleton:kendynet.a $(TESTDIR)/testsingleton.c
 	$(CC) $(CFLAGS) -o singleton $(TESTDIR)/testsingleton.c kendynet.a $(INCLUDE) $(LDFLAGS) $(DEFINE)
 testaoi:kendynet.a game.a $(TESTDIR)/testaoi.c $(TESTDIR)/testcommon.h
