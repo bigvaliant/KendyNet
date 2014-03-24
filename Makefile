@@ -49,6 +49,7 @@ kendynet.a: \
 		   core/src/minheap.c\
 		   core/src/lookup8.c\
 		   core/wpacket.h\
+		   core/src/wordfilter.c\
 		   core/src/wpacket.c
 		$(CC) $(CFLAGS) -c $^ $(INCLUDE) $(DEFINE)
 		ar -rc kendynet.a *.o
@@ -108,5 +109,8 @@ testlog:kendynet.a $(TESTDIR)/testlog.c $(TESTDIR)/testcommon.h
 	$(CC) $(CFLAGS) -o testlog $(TESTDIR)/testlog.c kendynet.a deps/hiredis/libhiredis.a  $(INCLUDE) $(LDFLAGS) $(DEFINE)	
 ringque:kendynet.a $(TESTDIR)/testringq.c
 	$(CC) $(CFLAGS) -o ringque $(TESTDIR)/testringq.c kendynet.a $(INCLUDE) $(LDFLAGS) $(DEFINE)
+filter:kendynet.a $(TESTDIR)/filter.c
+	$(CC) $(CFLAGS) -o filter $(TESTDIR)/filter.c kendynet.a $(INCLUDE) $(LDFLAGS) $(DEFINE)	
+	
 	
 	
