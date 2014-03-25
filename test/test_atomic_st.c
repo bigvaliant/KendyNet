@@ -121,7 +121,7 @@ int main()
 	for(; i < 1000; ++i)
 	{
 		g_points[i] = atomic_point_new();
-		g_points[i]->set(g_points[i],p);
+		atomic_point_set(g_points[i],p);
 	}
 	CREATE_THREAD_RUN(1,SetRotine,NULL);
 	CREATE_THREAD_RUN(1,GetRoutine,(void*)1);	

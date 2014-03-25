@@ -55,7 +55,7 @@ static inline void NAME##_set(struct NAME *at,TYPE v)\
 	at->array[at->index].version = ++at->g_version;\
     _FENCE;\
 	at->ptr = &at->array[at->index];\
-	at->index = ^= 0x1;\
+	at->index ^= 0x1;\
 	ATOMIC_INCREASE(&set_count);\
 }\
 static inline struct NAME *NAME##_new()\
