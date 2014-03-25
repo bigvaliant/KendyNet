@@ -10,9 +10,9 @@
 #include "core/lockfree.h"
 #include "core/ringque.h"
 
-DECLARE_RINGQUE(rque_int32_t,int32_t);
+DECLARE_RINGQUE(rque_int32,int32_t);
 
-rque_int32_t  mq1;
+rque_int32  mq1;
 
 
 //lockfree_stack mq1;
@@ -30,9 +30,8 @@ void *Routine1(void *arg)
         {
             int i = 0;
             for(; i < 10000000; ++i)
-            {
-				
-                RINGQUE_PUSH(mq1,1);//GetSystemMs());
+            {				
+                rque_int32_push(mq1,1);//GetSystemMs());
             }
         }
     }
@@ -53,7 +52,7 @@ void *Routine4(void *arg)
 	for( ; ; )
 	{
 		int32_t ret;
-		if(0 == RINGQUE_POP(mq1,&ret))
+		if(0 == rque_int32_pop(mq1,&ret))
 		{
 			++count;
 		}
@@ -65,7 +64,7 @@ void *Routine4(void *arg)
 int main()
 {
 	
-	mq1 = RINGQUE_NEW(rque_int32_t,65536/2);
+	mq1 = rque_int32_new(65536/2);
 	
 	thread_t t4 = create_thread(0);
 	thread_start_run(t4,Routine4,NULL);
