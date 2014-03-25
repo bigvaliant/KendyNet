@@ -4,6 +4,8 @@
 volatile int get_count = 0;
 volatile int set_count = 0;
 volatile int miss_count = 0;
+
+/*
 struct atomic_type *create_atomic_type(uint32_t size)
 {
 	struct atomic_type *at = calloc(1,sizeof(*at));
@@ -23,4 +25,4 @@ void destroy_atomic_type(struct atomic_type **_at)
 	free(at->array[1]);
 	free(at);
 	_at = NULL;
-}
+}*/

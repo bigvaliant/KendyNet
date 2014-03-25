@@ -19,6 +19,66 @@ volatile int get_count;
 volatile int set_count;
 volatile int miss_count;
 
+
+#define DECLARE_ATOMIC_TYPE(NAME,TYPE)\
+struct NAME##atomic_st{\
+	volatile int32_t version;\
+	T data;\
+};\
+struct NAME##atomic_type\
+{\
+	uint32_t g_version;\
+	int32_t index;\
+	volatile struct NAME##atomic_st *ptr;\
+	struct NAME##atomic_st array[2];\
+	TYPE (*get)(struct NAME##atomic_type*);\
+	void (*set)(struct NAME##atomic_type*,TYPE VAL);\
+};\
+static inline TYPE NAME##aotmic_get(struct NAME##atomic_type *at)\
+{\
+	TYPE ret;\
+	while(1)\
+	{\
+		struct atomic_st *ptr_p = (struct atomic_st *)at->ptr;\
+		int save_version = ptr_p->version;\
+		int s=at->data_size;\
+		ret = ptr_p->data;\
+        _FENCE;\
+		if(ptr_p == at->ptr && save_version == ptr_p->version)\
+			break;\
+		ATOMIC_INCREASE(&miss_count);\
+	}\
+	ATOMIC_INCREASE(&get_count);\
+	return ret;\
+}\
+static inline void NAME##aotmic_set(struct NAME##atomic_type *at,TYPE v)\
+{\
+	struct atomic_st *new_p = at->array[at->index];\
+	at->index ^= 0x1;\
+	new_p->data = v;\
+    _FENCE;\
+	new_p->version = ++at->g_version;\
+    _FENCE;\
+	at->ptr = new_p;\
+	ATOMIC_INCREASE(&set_count);\
+}\
+static inline struct NAME##atomic_type *NAME##_new()\
+{\
+	struct NAME##atomic_type *at = calloc(1,sizeof(*at));\
+	at->index = 0;\
+	at->g_version = 0;\
+	at->ptr = NULL;\
+	at->get = NAME##aotmic_get;\
+	at->set = NAME##aotmic_set;\
+	return at;\
+}\
+static inline void NAME##_free(struct NAME##atomic_type *at)\
+{\
+	free(at);\
+}
+
+
+/*
 struct atomic_st
 {
 	volatile int32_t version;
@@ -79,3 +139,4 @@ static inline void NAME(struct atomic_type *at,TYPE *p)\
 	at->ptr = new_p;\
 	ATOMIC_INCREASE(&set_count);\
 }
+*/
