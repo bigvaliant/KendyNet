@@ -21,27 +21,25 @@ volatile int miss_count;
 
 
 #define DECLARE_ATOMIC_TYPE(NAME,TYPE)\
-struct NAME##atomic_st{\
+struct NAME##_st{\
 	volatile int32_t version;\
-	T data;\
+	TYPE data;\
 };\
-struct NAME##atomic_type\
+struct NAME\
 {\
 	uint32_t g_version;\
 	int32_t index;\
-	volatile struct NAME##atomic_st *ptr;\
-	struct NAME##atomic_st array[2];\
-	TYPE (*get)(struct NAME##atomic_type*);\
-	void (*set)(struct NAME##atomic_type*,TYPE VAL);\
+	volatile struct NAME##_st *ptr;\
+	struct NAME##_st array[2];\
 };\
-static inline TYPE NAME##aotmic_get(struct NAME##atomic_type *at)\
+static inline TYPE NAME##_get(struct NAME *at)\
 {\
 	TYPE ret;\
 	while(1)\
 	{\
-		struct atomic_st *ptr_p = (struct atomic_st *)at->ptr;\
+		struct NAME##_st *ptr_p = (struct NAME##_st *)at->ptr;\
 		int save_version = ptr_p->version;\
-		int s=at->data_size;\
+		_FENCE;\
 		ret = ptr_p->data;\
         _FENCE;\
 		if(ptr_p == at->ptr && save_version == ptr_p->version)\
@@ -51,92 +49,24 @@ static inline TYPE NAME##aotmic_get(struct NAME##atomic_type *at)\
 	ATOMIC_INCREASE(&get_count);\
 	return ret;\
 }\
-static inline void NAME##aotmic_set(struct NAME##atomic_type *at,TYPE v)\
+static inline void NAME##_set(struct NAME *at,TYPE v)\
 {\
-	struct atomic_st *new_p = at->array[at->index];\
-	at->index ^= 0x1;\
-	new_p->data = v;\
+	at->array[at->index].data = v;\
+	at->array[at->index].version = ++at->g_version;\
     _FENCE;\
-	new_p->version = ++at->g_version;\
-    _FENCE;\
-	at->ptr = new_p;\
+	at->ptr = &at->array[at->index];\
+	at->index = ^= 0x1;\
 	ATOMIC_INCREASE(&set_count);\
 }\
-static inline struct NAME##atomic_type *NAME##_new()\
+static inline struct NAME *NAME##_new()\
 {\
-	struct NAME##atomic_type *at = calloc(1,sizeof(*at));\
+	struct NAME *at = calloc(1,sizeof(*at));\
 	at->index = 0;\
 	at->g_version = 0;\
 	at->ptr = NULL;\
-	at->get = NAME##aotmic_get;\
-	at->set = NAME##aotmic_set;\
 	return at;\
 }\
-static inline void NAME##_free(struct NAME##atomic_type *at)\
+static inline void NAME##_free(struct NAME *at)\
 {\
 	free(at);\
 }
-
-
-/*
-struct atomic_st
-{
-	volatile int32_t version;
-	char data[];
-};
-
-struct atomic_type
-{
-	uint32_t g_version;
-	int32_t index;
-	volatile struct atomic_st *ptr;
-	int32_t data_size;
-	struct atomic_st* array[2];	
-};
-
-struct atomic_type *create_atomic_type(uint32_t size);
-void destroy_atomic_type(struct atomic_type **_at);
-
-#define GET_ATOMIC_ST(NAME,TYPE)\
-static inline void NAME(struct atomic_type *at,TYPE *ret)\
-{\
-	while(1)\
-	{\
-		struct atomic_st *ptr_p = (struct atomic_st *)at->ptr;\
-		int save_version = ptr_p->version;\
-		int s=at->data_size;\
-		int i = 0;\
-		if(at->data_size%4==0)\
-			for(;s>0;++i,s-=4)((int32_t*)ret->base.data)[i]=((int32_t*)ptr_p->data)[i];\
-		else if(at->data_size%2==0)\
-			for(;s>0;++i,s-=2)((int16_t*)ret->base.data)[i]=((int16_t*)ptr_p->data)[i];\
-		else\
-			memcpy(ret->base.data,ptr_p->data,at->data_size);\
-        _FENCE;\
-		if(ptr_p == at->ptr && save_version == ptr_p->version)\
-			break;\
-		ATOMIC_INCREASE(&miss_count);\
-	}\
-	ATOMIC_INCREASE(&get_count);\
-}
-
-#define SET_ATOMIC_ST(NAME,TYPE)\
-static inline void NAME(struct atomic_type *at,TYPE *p)\
-{\
-	struct atomic_st *new_p = at->array[at->index];\
-	at->index ^= 0x1;\
-	int s=at->data_size;\
-	int i = 0;\
-	if(at->data_size%4==0)\
-		for(;s>0;++i,s-=4)((int32_t*)new_p->data)[i]=((int32_t*)p->base.data)[i];\
-	else if(at->data_size%2==0)\
-		for(;s>0;++i,s-=2)((int16_t*)new_p->data)[i]=((int16_t*)p->base.data)[i];\
-	else\
-		for(;i<s;++i)new_p->data[i]=p->base.data[i];\
-    _FENCE;\
-	new_p->version = ++at->g_version;\
-    _FENCE;\
-	at->ptr = new_p;\
-	ATOMIC_INCREASE(&set_count);\
-}
-*/
