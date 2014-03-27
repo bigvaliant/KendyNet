@@ -24,8 +24,7 @@ static inline idmgr_t new_idmgr(int32_t beginid,int32_t endid)
 	_idmgr->beginid = beginid;
 	_idmgr->endid = endid;
 	llist_init(&_idmgr->idpool);
-	int32_t i = beginid;
-	for(; i <= endid; ++i){
+	for(int32_t i = beginid;i <= endid; ++i){
 		idnode *id = calloc(1,sizeof(*id));
 		id->id = i;
 		LLIST_PUSH_BACK(&_idmgr->idpool,(lnode*)id);

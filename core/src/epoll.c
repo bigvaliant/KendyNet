@@ -174,8 +174,8 @@ int32_t epoll_loop(poller_t n,int32_t ms)
         int32_t nfds = _epoll_wait(n->poller_fd,n->events,MAX_SOCKET,(uint32_t)sleep_ms);
 		if(nfds < 0)
 			return -1;
-		int32_t i;
-		for(i = 0 ; i < nfds ; ++i)
+		
+		for(int32_t i=0; i < nfds ; ++i)
 		{
 			if(n->events[i].data.fd == n->pipe_reader)
 			{

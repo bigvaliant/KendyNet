@@ -87,8 +87,8 @@ static inline struct callstack_frame * get_csf(struct llist *pool)
 {
 	if(LLIST_IS_EMPTY(pool))
 	{
-		int32_t i = 0;
-		for( ; i < 256; ++i){
+		
+		for(int32_t i = 0;i < 256; ++i){
 			struct callstack_frame *call_frame = calloc(1,sizeof(*call_frame));
 			LLIST_PUSH_FRONT(pool,(lnode*)call_frame);
 		}

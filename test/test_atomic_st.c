@@ -117,8 +117,7 @@ int main()
 {		
 	struct point p;
 	p.x = p.y = p.z = 1;
-	int i = 0;
-	for(; i < 1000; ++i)
+	for(int i = 0; i < 1000; ++i)
 	{
 		g_points[i] = atomic_point_new();
 		atomic_point_set(g_points[i],p);

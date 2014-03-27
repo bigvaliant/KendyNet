@@ -223,8 +223,7 @@ asynnet_t asynnet_new(uint8_t  pollercount)
     if(!asynet) return NULL;
     asynet->poller_count = pollercount;
 	//创建线程池
-	int32_t i = 0;
-	for(; i < pollercount;++i)
+	for(int32_t i = 0; i < pollercount;++i)
 	{
         asynet->netpollers[i].poller_thd = create_thread(THREAD_JOINABLE);
         asynet->netpollers[i].mq_in = new_msgque(32,msg_destroyer);
@@ -238,8 +237,8 @@ void asynnet_stop(asynnet_t asynet)
 {
     if(asynet->flag == 0){
         asynet->flag = 1;
-		int32_t i = 0;
-        for( ;i < asynet->poller_count; ++i){
+		
+        for(int32_t i = 0;i < asynet->poller_count; ++i){
             asynet->netpollers[i].flag = 1;
             thread_join(asynet->netpollers[i].poller_thd);
 		}
@@ -249,8 +248,7 @@ void asynnet_stop(asynnet_t asynet)
 void asynnet_delete(asynnet_t asynet)
 {
     asynnet_stop(asynet);
-	int32_t i = 0;
-    for( ;i < asynet->poller_count; ++i){
+    for(int32_t i = 0;i < asynet->poller_count; ++i){
         destroy_thread(&asynet->netpollers[i].poller_thd);
         destroy_service(&asynet->netpollers[i].netpoller);
 	}

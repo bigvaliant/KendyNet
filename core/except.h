@@ -94,8 +94,7 @@ static inline struct llist *GetCurrentThdExceptionStack()
 	if(!epst)
 	{
 		epst = calloc(1,sizeof(*epst));
-		int32_t i = 0;
-		for( ; i < 256; ++i){
+		for(int32_t i = 0;i < 256; ++i){
 			struct callstack_frame *call_frame = calloc(1,sizeof(*call_frame));
 			LLIST_PUSH_FRONT(&epst->csf_pool,(lnode*)call_frame);
 		}

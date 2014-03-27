@@ -41,8 +41,7 @@ int32_t asyncall(msgdisp_t sender,msgdisp_t recver,
 		msg->context->caller = sender;
 	}
 	if(c > 0){
-		uint8_t i = 0;
-		for( ;i < c; ++i)
+		for(uint8_t i = 0;i < c; ++i)
 			msg->param[i] = param[i];
 	}
 

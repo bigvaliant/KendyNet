@@ -140,7 +140,6 @@ static inline int32_t _hash_map_expand(hash_map_t h)
 {
 	uint32_t old_slot_size = h->slot_size;
 	struct hash_item *old_items = h->_items;
-	uint32_t i = 0;
 	h->slot_size <<= 1;
 	h->_items = calloc(h->slot_size,h->item_size);
 	if(!h->_items)
@@ -151,7 +150,7 @@ static inline int32_t _hash_map_expand(hash_map_t h)
 	}
 	h->size = 0;
 	dlist_init(&h->dlink);
-	for(; i < old_slot_size; ++i)
+	for(uint32_t i = 0; i < old_slot_size; ++i)
 	{
 		struct hash_item *_item = GET_ITEM(old_items,h->item_size,i);
 		if(_item->flag == ITEM_USED)
