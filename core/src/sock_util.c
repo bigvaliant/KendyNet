@@ -126,9 +126,9 @@ SOCK Listen(SOCK sock,int32_t backlog)
 	return INVALID_SOCK;
 }
 
-int set_reuseaddr(SOCK sock){
+int32_t set_reuseaddr(SOCK sock){
 	socket_t s = get_socket_wrapper(sock);
-	int yes = 1;
+	int32_t yes = 1;
 	if (setsockopt(s->fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))){
 		return -errno;
 	}
