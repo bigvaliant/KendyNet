@@ -152,7 +152,6 @@ int32_t EConnect(ENGINE e,const char *ip,int32_t port,void *ud,CB_CONNECT on_con
         }
         s->socket_type = CONNECT;
         s->timeout = GetSystemMs64() + (uint64_t)ms;
-        s->sock = sock;
         s->engine = engine;
         s->ud = ud;
         s->on_connect = on_connect;

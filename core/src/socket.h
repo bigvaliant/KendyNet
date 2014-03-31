@@ -56,7 +56,7 @@ typedef struct socket_wrapper
         struct {
             uint64_t timeout;
             void *ud;
-            SOCK  sock;
+            //SOCK  sock;
             union{
                 void (*on_accept)(SOCK,struct sockaddr_in*,void*);
                 void (*on_connect)(SOCK,struct sockaddr_in*,void*,int);

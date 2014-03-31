@@ -36,21 +36,21 @@ void process_connect(socket_t s)
 
     if (getsockopt(s->fd, SOL_SOCKET, SO_ERROR, &err, &len) == -1) {
         s->on_connect(INVALID_SOCK,&s->addr_remote,s->ud,err);
-        CloseSocket(s->sock);
+        CloseSocket(s);
         return;
     }
 
     if(err){
         errno = err;
         s->on_connect(INVALID_SOCK,&s->addr_remote,s->ud,errno);
-        CloseSocket(s->sock);
+        CloseSocket(s);
         return;
     }
     //connect success
     s->engine->UnRegister(s->engine,s);
     len = sizeof(s->addr_local);
     getsockname(s->fd,(struct sockaddr*)&s->addr_local,&len);
-    s->on_connect(s->sock,&s->addr_remote,s->ud,0);
+    s->on_connect(s,&s->addr_remote,s->ud,0);
 }
 
 void process_accept(socket_t s)

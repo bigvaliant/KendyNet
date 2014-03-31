@@ -107,7 +107,7 @@ int8_t check_connect_timeout(struct dnode *dln, void *ud)
     if(l_now >= s->timeout){
         s->engine->UnRegister(s->engine,s);
         s->on_connect(INVALID_SOCK,&s->addr_remote,s->ud,ETIMEDOUT);
-        CloseSocket(s->sock);
+        CloseSocket(s);
         return 1;
     }
     return 0;
