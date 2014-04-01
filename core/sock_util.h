@@ -63,6 +63,8 @@ void    ShutDownRecv(SOCK);
 //从关联的engine中去掉写监听,但不向对端发送写关闭
 void    ShutDownSend(SOCK);
 
+int32_t set_reuseaddr(SOCK);
+
 int32_t CloseSocket(SOCK);
 
 /*

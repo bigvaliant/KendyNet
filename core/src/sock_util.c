@@ -126,6 +126,15 @@ SOCK Listen(SOCK sock,int32_t backlog)
 	return INVALID_SOCK;
 }
 
+int32_t set_reuseaddr(SOCK sock){
+	socket_t s = get_socket_wrapper(sock);
+	int32_t yes = 1;
+	if (setsockopt(s->fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes))){
+		return -errno;
+	}
+	return 0;
+}
+
 SOCK Tcp_Listen(const char *ip,uint16_t port,int32_t backlog)
 {
     struct sockaddr_in servaddr;
@@ -148,6 +157,11 @@ SOCK Tcp_Listen(const char *ip,uint16_t port,int32_t backlog)
 	else
 		servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	servaddr.sin_port = htons(port);
+	
+	if (set_reuseaddr(sock) != 0){
+		CloseSocket(sock);
+		return INVALID_SOCK;
+	}
 
 	if(Bind(sock,(struct sockaddr*)&servaddr,sizeof(servaddr)) == INVALID_SOCK)
 	{
