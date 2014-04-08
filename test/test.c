@@ -18,7 +18,9 @@ void testObj(lua_State *L)
 	{
 		luaObject_t o = create_luaObj(L,-2);
 		CALL_OBJ_FUNC(o,"show",0);
+		printf("before %d\n",lua_gettop(L));
 		int type = GET_OBJ_FIELD(o,"type",int,lua_tonumber);
+		printf("after %d\n",lua_gettop(L));
 		printf("%d\n",type);
 	}	
 }
@@ -65,7 +67,7 @@ int main()
 		lua_pop(L,1);
 		printf("%s\n",error);
 	}
-	//testObj(L);
+	testObj(L);
 	//testcall(L);
 	//testArray(L);
 	luaObject_t obj = GETGLOBAL_OBJECT(L,"toredis");

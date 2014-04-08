@@ -251,7 +251,7 @@ void        release_luaObj(luaObject_t);
 			lua_gettable(OBJ->L,-2);\
 			do __result = (TYPE)POP(OBJ->L,-1);\
 			while(0);\
-			lua_pop(OBJ->L,2);\
+			lua_pop(OBJ->L,1);\
 		__result;})
 		
 #define SET_OBJ_FIELD(OBJ,FIELD,PUSH,VAL)\
