@@ -125,6 +125,7 @@ static inline int rpk_peek(rpacket_t r,int8_t *out,uint32_t size){
 		if(likely(r->readbuf->size - r->rpos >= sizeof(TYPE))){\
 			uint32_t pos = r->rpos;\
 			r->rpos += sizeof(TYPE);\
+			r->data_remain -= sizeof(TYPE);\
 			return *(TYPE*)(r->readbuf->buf+pos);\
 		}
 

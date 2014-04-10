@@ -195,6 +195,9 @@ static inline void wpk_write(wpacket_t w,int8_t *addr,uint32_t size)
 		if(likely(w->writebuf->capacity - w->wpos >= sizeof(TYPE))){\
 			uint32_t pos = w->wpos;\
 			w->wpos += sizeof(TYPE);\
+			(*w->len) += sizeof(TYPE);\
+			w->data_size += sizeof(TYPE);\
+			w->writebuf->size += sizeof(TYPE);\
 			*((TYPE*)(&w->writebuf->buf[pos])) = VALUE;\
 			return;\
 		}

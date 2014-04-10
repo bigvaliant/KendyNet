@@ -163,6 +163,7 @@ static void dispatch_msg(msgdisp_t disp,msg_t msg)
         msg_asyncall_t asyncall = (msg_asyncall_t)msg;
         if(asyncall->fn_call){
             asyncall->fn_call(asyncall->context,(void**)&asyncall->param);
+			asyncall->context = NULL;
         }
     }else if(msg->type == MSG_ASYNRESULT){
         msg_asynresult_t asynresult = (msg_asynresult_t)msg;

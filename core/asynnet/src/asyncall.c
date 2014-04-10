@@ -10,6 +10,7 @@ int32_t asynreturn(asyncall_context_t context,void *result)
 	msg_asynresult_t msg = calloc(1,sizeof(*msg));
 	MSG_TYPE(msg) = MSG_ASYNRESULT;
 	msg->context = context;
+	context->result = result;
 	if(0 != send_msg(NULL,context->caller,(msg_t)msg))
 	{
 		msg_destroyer(msg);
