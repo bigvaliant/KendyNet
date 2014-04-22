@@ -177,6 +177,11 @@ int32_t send_packet(struct connection *c,wpacket_t w)
 		wpk_destroy(&w);
 		return -1;
 	}
+	if(*w->len > c->recv_bufsize){
+		//包长度超大，记录日志
+		wpk_destroy(&w);
+		return 0;
+	}
 	st_io *O;
 	if(w){
 		w->base.tstamp = GetSystemMs64();
