@@ -6,7 +6,7 @@
 
 //#define BUFFER_SIZE 65536
 
-//½ÓÊÕÏà¹Øº¯Êý
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½
 static inline void update_next_recv_pos(struct connection *c,int32_t _bytestransfer)
 {
     assert(_bytestransfer >= 0);
@@ -40,11 +40,15 @@ static inline int unpack(struct connection *c)
 				return 1;
 			buffer_read(c->unpack_buf,c->unpack_pos,(int8_t*)&pk_len,sizeof(pk_len));
 			pk_total_size = pk_len+sizeof(pk_len);
+			if(pk_total_size > c->recv_bufsize){
+				//å¯èƒ½æ˜¯æ”»å‡»
+				return -1;
+			}
 			if(pk_total_size > c->unpack_size)
 				return 1;
 			r = rpk_create(c->unpack_buf,c->unpack_pos,pk_len,c->raw);
 			r->base.tstamp = GetSystemSec();
-			//µ÷Õûunpack_bufºÍunpack_pos
+			//ï¿½ï¿½ï¿½ï¿½unpack_bufï¿½ï¿½unpack_pos
 			do{
 				uint32_t size = c->unpack_buf->size - c->unpack_pos;
 				size = pk_total_size > size ? size:pk_total_size;
@@ -53,9 +57,9 @@ static inline int unpack(struct connection *c)
 				c->unpack_size -= size;
 				if(c->unpack_pos >= c->unpack_buf->capacity)
 				{
-					/* unpackÖ®Ç°ÏÈÖ´ÐÐÁËupdate_next_recv_pos,ÔÚupdate_next_recv_posÖÐ
-					*  Èç¹ûbuffer±»ÌîÂú£¬»áÀ©Õ¹Ò»¿éÐÂµÄbuffer¼ÓÈëÁ´±íÖÐ£¬ËùÒÔÕâÀïµÄ
-					*  c->unpack_buf->next²»Ó¦¸Ã»áÊÇNULL
+					/* unpackÖ®Ç°ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ï¿½update_next_recv_pos,ï¿½ï¿½update_next_recv_posï¿½ï¿½
+					*  ï¿½ï¿½ï¿½ï¿½bufferï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¹Ò»ï¿½ï¿½ï¿½Âµï¿½bufferï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+					*  c->unpack_buf->nextï¿½ï¿½Ó¦ï¿½Ã»ï¿½ï¿½ï¿½NULL
 					*/
 					assert(c->unpack_buf->next);
 					c->unpack_pos = 0;
@@ -72,9 +76,9 @@ static inline int unpack(struct connection *c)
 			c->unpack_size -= pk_len;
 			if(c->unpack_pos >= c->unpack_buf->capacity)
 			{
-				/* unpackÖ®Ç°ÏÈÖ´ÐÐÁËupdate_next_recv_pos,ÔÚupdate_next_recv_posÖÐ
-				*  Èç¹ûbuffer±»ÌîÂú£¬»áÀ©Õ¹Ò»¿éÐÂµÄbuffer¼ÓÈëÁ´±íÖÐ£¬ËùÒÔÕâÀïµÄ
-				*  c->unpack_buf->next²»Ó¦¸Ã»áÊÇNULL
+				/* unpackÖ®Ç°ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ï¿½update_next_recv_pos,ï¿½ï¿½update_next_recv_posï¿½ï¿½
+				*  ï¿½ï¿½ï¿½ï¿½bufferï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¹Ò»ï¿½ï¿½ï¿½Âµï¿½bufferï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+				*  c->unpack_buf->nextï¿½ï¿½Ó¦ï¿½Ã»ï¿½ï¿½ï¿½NULL
 				*/
 				assert(c->unpack_buf->next);
 				c->unpack_pos = 0;
@@ -93,7 +97,7 @@ static inline int unpack(struct connection *c)
 	return 1;
 }
 
-//·¢ËÍÏà¹Øº¯Êý
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½
 static inline st_io *prepare_send(struct connection *c)
 {
 	int32_t i = 0;
@@ -204,14 +208,14 @@ void active_close(struct connection *c)
 {
     if(c->status & SESTABLISH){
         if(LLIST_IS_EMPTY(&c->send_list)){
-            //Ã»ÓÐÊý¾ÝÐèÒª·¢ËÍÁËÖ±½Ó¹Ø±Õ
+            //Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½Ó¹Ø±ï¿½
             c->status = SCLOSE;
 			CloseSocket(c->socket);
             printf("active close\n");
             c->cb_disconnect(c,0);
 		}else
         {
-            //»¹ÓÐÊý¾ÝÐèÒª·¢ËÍ£¬µÈÊý¾Ý·¢ËÍÍê±ÏºóÔÙ¹Ø±Õ
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïºï¿½ï¿½Ù¹Ø±ï¿½
             ShutDownRecv(c->socket);
             c->status = (c->status | SWAITCLOSE | SRCLOSE);
         }
@@ -234,7 +238,7 @@ void RecvFinish(int32_t bytestransfer,struct connection *c,uint32_t err_code)
             if(c->status != SCLOSE){
                 c->status = SCLOSE;
                 CloseSocket(c->socket);
-                //±»¶¯¹Ø±Õ
+                //ï¿½ï¿½ï¿½ï¿½ï¿½Ø±ï¿½
                 c->cb_disconnect(c,err_code);
 			}
 			return;
@@ -245,7 +249,14 @@ void RecvFinish(int32_t bytestransfer,struct connection *c,uint32_t err_code)
 				update_next_recv_pos(c,bytestransfer);
 				c->unpack_size += bytestransfer;
 				total_size += bytestransfer;
-				if(!unpack(c)) return;
+				int r = unpack(c);
+				if(r < 0){
+					//æ•°æ®åŒ…é”™è¯¯ï¼Œè§¦å‘è¿žæŽ¥æ–­å¼€
+					bytestransfer = -1;
+					err_code = 0;
+					break;
+				}else if(r == 0)
+					return;
 				buf = c->next_recv_buf;
 				pos = c->next_recv_pos;
 				recv_size = c->recv_bufsize;
@@ -308,7 +319,7 @@ void SendFinish(int32_t bytestransfer,struct connection *c,uint32_t err_code)
 				    c->doing_send = 0;
                     if(c->status & SWAITCLOSE)
 					{
-                        //Êý¾ÝÒÑ¾­·¢ËÍÍê±Ï£¬¹Ø±Õ
+                        //ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï£ï¿½ï¿½Ø±ï¿½
                         c->status = SCLOSE;
                         CloseSocket(c->socket);
                         c->cb_disconnect(c,0);
