@@ -2,9 +2,8 @@ CFLAGS = -g -Wall -fno-strict-aliasing -std=gnu99
 LDFLAGS = -lpthread -lrt -lm -ltcmalloc
 SHARED = -fPIC --shared
 CC = gcc
-INCLUDE =  -Icore -I.\
-		   -Ideps/luajit-2.0/src -Ideps/hiredis
-DEFINE = -D_DEBUG -D_LINUX -DMQ_HEART_BEAT
+INCLUDE =  -Icore -I.\ -Ideps/hiredis
+DEFINE = -D_DEBUG -D_LINUX -DMQ_HEART_BEAT -DUSE_LUAJIT
 TESTDIR = test
 
 kendynet.a: \
