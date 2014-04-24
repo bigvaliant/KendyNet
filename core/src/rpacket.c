@@ -193,7 +193,9 @@ const char* rpk_read_string(rpacket_t r)
 {
     if(PACKET_RAW(r))return NULL;
 	uint32_t len = 0;
-	return (const char *)rpk_read_binary(r,&len);
+	const char *str = (const char *)rpk_read_binary(r,&len);
+	if(str && *(str+len) != '0') str = NULL;
+	return str;
 }
 
 const void* rpk_read_binary(rpacket_t r,uint32_t *len)
