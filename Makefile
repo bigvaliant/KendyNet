@@ -78,7 +78,10 @@ log:testlog.c kendynet.a
 	$(CC) $(CFLAGS) -o log testlog.c kendynet.a $(INCLUDE) $(LDFLAGS) $(DEFINE)
 	
 testredis:testredis.c kendynet.a						
-	$(CC) $(CFLAGS) -o testredis testredis.c kendynet.a hiredis/libhiredis.a $(INCLUDE) $(LDFLAGS) $(DEFINE)				
+	$(CC) $(CFLAGS) -o testredis testredis.c kendynet.a hiredis/libhiredis.a $(INCLUDE) $(LDFLAGS) $(DEFINE)	
+
+testheap:testminheap.c kendynet.a						
+	$(CC) $(CFLAGS) -o testheap testminheap.c kendynet.a $(INCLUDE) $(LDFLAGS) $(DEFINE)	
 	
 	
 	

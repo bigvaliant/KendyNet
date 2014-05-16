@@ -84,22 +84,22 @@ static inline void down(minheap_t m,int32_t idx){
 	int32_t l = left(idx);
 	int32_t r = right(idx);
 	int32_t min = idx;
-	if(l < m->size)
+	if(l <= m->size)
 	{
 		assert(m->data[l]);
 		assert(m->data[idx]);
 	}
 
-	if(l < m->size && m->less(m->data[l],m->data[idx]))
+	if(l <= m->size && m->less(m->data[l],m->data[idx]))
 		min = l;
 
-	if(r < m->size)
+	if(r <= m->size)
 	{
 		assert(m->data[r]);
 		assert(m->data[min]);
 	}
 
-	if(r < m->size && m->less(m->data[r],m->data[min]))
+	if(r <= m->size && m->less(m->data[r],m->data[min]))
 		min = r;
 
 	if(min != idx)
@@ -137,12 +137,15 @@ static inline void minheap_insert(minheap_t m,struct heapele *e)
 	e->index = m->size;
 	up(m,e->index);	
 }
-
+/*
+#include <stdio.h>
 static inline void minheap_remove(minheap_t m,struct heapele *e)
 {
 	struct heapele **back = calloc(1,sizeof(struct heapele*)*(m->size-1));
 	int32_t i = 1;
 	int32_t c = 1;
+	if(m->size == 5) 
+		printf("here");
 	for( ; i <= m->size;++i)
 	{
 		m->data[i]->index = 0;
@@ -156,7 +159,7 @@ static inline void minheap_remove(minheap_t m,struct heapele *e)
 		minheap_insert(m,back[i]);
 	free(back);
 }
-
+*/
 
 
 //return the min element
