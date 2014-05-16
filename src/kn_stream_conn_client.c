@@ -5,26 +5,33 @@
 typedef struct kn_stream_client{
 	struct service base;
 	kn_proactor_t proactor;
-	void (*on_connection)(kn_stream_client_t,kn_stream_conn_t);
-	void (*on_connect_fail)(kn_stream_client_t,kn_sockaddr *addr,int err);
+	void (*on_connection)(kn_stream_client_t,kn_stream_conn_t,void *);
+	void (*on_connect_fail)(kn_stream_client_t,kn_sockaddr *addr,int err,void *);
 	kn_timer_t   timer;
-}kn_stream_server,*kn_stream_server_t;
+}kn_stream_client,*kn_stream_client_t;
+
+struct connect_context{
+	kn_stream_client_t client;
+	void*              ud;
+};
 
 static void connect_cb(kn_fd_t fd,struct kn_sockaddr* addr,void *ud,int err)
 {
-	kn_stream_client_t client = (kn_stream_client_t)ud;
+	struct connect_context *c = ud;
+	kn_stream_client_t client = c->client;
 	if(fd){
 		assert(client->on_connection);
-		client->on_connection(client,kn_new_stream_conn(fd));
+		client->on_connection(client,kn_new_stream_conn(fd),c->ud);
 	}else{
-		client->on_connect_fail(client,addr,err);
-	} 	
+		client->on_connect_fail(client,addr,err,c->ud);
+	}
+	free(c);
 }
 
 void kn_stream_client_tick(struct service *s);
 kn_stream_client_t kn_new_stream_client(kn_proactor_t p,
-										void (*on_connect)(kn_stream_client_t,kn_stream_conn_t),
-										void (*on_connect_fail)(kn_stream_client_t,kn_sockaddr*,int err))
+										void (*on_connect)(kn_stream_client_t,kn_stream_conn_t,void *ud),
+										void (*on_connect_fail)(kn_stream_client_t,kn_sockaddr*,int err,void *ud))
 {
 	kn_stream_client_t client = calloc(1,sizeof(*client));
 
@@ -89,8 +96,13 @@ int kn_stream_client_bind( kn_stream_client_t client,
 int kn_stream_connect(kn_stream_client_t client,
 					  struct kn_sockaddr *addr_local,				  
 			          struct kn_sockaddr *addr_remote,
+					  void   *ud,
 			          uint64_t timeout)
 {
+
+	struct connect_context *c = calloc(1,sizeof(*c));
+	c->client = client;
+	c->ud = ud;
 	return kn_asyn_connect(client->proactor,SOCK_STREAM,addr_local,addr_remote,
-						   connect_cb,(void*)client,timeout);	
+						   connect_cb,(void*)c,timeout);	
 }	

@@ -19,9 +19,10 @@ typedef struct redisconn{
 	kn_fd                 base;
 	int                   state;//REDIS_CONNECTING/REDIS_ESTABLISH
 	redisAsyncContext*    context;
-	void (*cb_connect)(struct redisconn*,int err);
-	void (*cb_disconnected)(struct redisconn*);
+	void (*cb_connect)(struct redisconn*,int err,void *);
+	void (*cb_disconnected)(struct redisconn*,void *);
 	kn_dlist              pending_command;
+	void                  *ud;
 	
 }redisconn,*redisconn_t;
 

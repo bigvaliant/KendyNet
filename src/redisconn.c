@@ -20,21 +20,21 @@ static void redis_on_active(kn_fd_t s,int event){
 		int err = 0;
 		socklen_t len = sizeof(err);
 		if (getsockopt(s->fd, SOL_SOCKET, SO_ERROR, &err, &len) == -1) {
-			rc->cb_connect(rc,-1);
+			rc->cb_connect(rc,-1,rc->ud);
 			//kn_closefd(s);
 			kn_redisDisconnect(rc);
 			return;
 		}
 		if(err){
 			errno = err;
-			rc->cb_connect(rc,errno);
+			rc->cb_connect(rc,errno,rc->ud);
 			kn_redisDisconnect(rc);
 			//kn_closefd(s);
 			return;
 		}
 		//connect success  
 		rc->state = REDIS_ESTABLISH;
-		rc->cb_connect(rc,0);			
+		rc->cb_connect(rc,0,rc->ud);			
 	}else{
 		if(event & (EPOLLERR | EPOLLHUP)){
 			kn_redisDisconnect(rc);	
@@ -103,7 +103,7 @@ static void redisCleanup(void *privdata) {
     redisconn_t con = (redisconn_t)privdata;
     if(con){
 		if(con->state == REDIS_ESTABLISH && con->cb_disconnected)
-			con->cb_disconnected(con);		
+			con->cb_disconnected(con,con->ud);		
 		kn_proactor_t p = con->base.proactor;
 		p->UnRegister(p,(kn_fd_t)con);
 		con->state = REDIS_CLOSE;
@@ -114,9 +114,9 @@ static void redisCleanup(void *privdata) {
 
 int kn_redisAsynConnect(struct kn_proactor *p,
 						const char *ip,unsigned short port,
-						void (*cb_connect)(struct redisconn*,int err),
-						void (*cb_disconnected)(struct redisconn*)
-						)
+						void (*cb_connect)(struct redisconn*,int err,void *ud),
+						void (*cb_disconnected)(struct redisconn*,void *ud),
+						void *ud)
 {
 	redisAsyncContext *c = redisAsyncConnect(ip, port);
     if(c->err) {
@@ -131,6 +131,7 @@ int kn_redisAsynConnect(struct kn_proactor *p,
 	con->state = REDIS_CONNECTING; 
 	con->cb_connect = cb_connect; 
 	con->cb_disconnected = cb_disconnected;
+	con->ud = ud;
 	kn_dlist_init(&con->pending_command);
     kn_ref_init(&con->base.ref,redisconn_destroy);
 	

@@ -9,8 +9,8 @@
 typedef struct kn_stream_client* kn_stream_client_t;
 
 kn_stream_client_t kn_new_stream_client(kn_proactor_t,
-										void (*)(kn_stream_client_t,kn_stream_conn_t),//on_connect
-										void (*)(kn_stream_client_t,kn_sockaddr*,int err)//on_connect_fail
+										void (*)(kn_stream_client_t,kn_stream_conn_t,void *ud),//on_connect
+										void (*)(kn_stream_client_t,kn_sockaddr*,int err,void *ud)//on_connect_fail
 										);
 										
 void kn_destroy_stream_client(kn_stream_client_t);
@@ -30,6 +30,7 @@ int  kn_stream_client_bind(kn_stream_client_t,
 int kn_stream_connect(kn_stream_client_t,
 					  struct kn_sockaddr *addr_local,				  
 			          struct kn_sockaddr *addr_remote,
-			          uint64_t timeout);				   
+			          void   *ud,
+					  uint64_t timeout);				   
 
 #endif

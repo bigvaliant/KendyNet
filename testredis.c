@@ -18,12 +18,14 @@ static void redisget_cb(redisconn_t rc,redisReply *reply,void *pridata){
 	//kn_redisDisconnect(rc);
 }
 
-static void cb_redis_disconnected(redisconn_t rc){
+static void cb_redis_disconnected(redisconn_t rc,void *_){
+	(void)_;
 	printf("disconnected\n");
 }
 
 
-static void cb_redis_connect(redisconn_t rc,int err){
+static void cb_redis_connect(redisconn_t rc,int err,void *_){
+	(void)_;
 	if(err == 0){
 		printf("connect success\n");
 		
