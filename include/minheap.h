@@ -113,7 +113,8 @@ static inline void minheap_change(minheap_t m,struct heapele *e)
 {
 	int idx = e->index;
 	down(m,idx);
-	up(m,idx);
+	if(idx == e->index)
+		up(m,idx);
 }
 
 static inline void minheap_insert(minheap_t m,struct heapele *e)

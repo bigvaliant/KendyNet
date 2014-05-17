@@ -18,7 +18,7 @@ void minheap_destroy(minheap_t *m)
 
 void minheap_clear(minheap_t m,clear_fun f)
 {
-	for(uint32_t i = 1; i < m->size; ++i)
+	for(uint32_t i = 1; i <= m->size; ++i)
 	{
 		if(f)
 			f(m->data[i]);
