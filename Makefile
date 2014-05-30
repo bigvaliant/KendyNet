@@ -83,5 +83,9 @@ testredis:testredis.c kendynet.a
 testheap:testminheap.c kendynet.a						
 	$(CC) $(CFLAGS) -o testheap testminheap.c kendynet.a $(INCLUDE) $(LDFLAGS) $(DEFINE)	
 	
+testexcp:kendynet.a testexception.c
+	$(CC) $(CFLAGS) -o testexcp testexception.c kendynet.a $(INCLUDE) $(LDFLAGS)	$(DEFINE) -rdynamic -ldl
+
+	
 	
 	
