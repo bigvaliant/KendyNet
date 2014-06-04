@@ -22,6 +22,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <signal.h>
+#include <assert.h>
 #include "kn_atomic.h"
 #include "kn_except.h"  
   
@@ -53,6 +54,7 @@ static inline atomic_32_t kn_ref_release(kn_ref *r)
     atomic_32_t count;
     int c;
     struct timespec ts;
+    assert(r->refcount > 0);
     if((count = ATOMIC_DECREASE(&r->refcount)) == 0){
         r->identity = 0;
         _FENCE;
