@@ -12,21 +12,24 @@ static int  on_packet(kn_stream_conn_t conn,rpacket_t rpk){
 }
 
 static void on_disconnected(kn_stream_conn_t conn,int err){
-	printf("on_disconnected\n");
-	//kn_stream_connect(c,NULL,&remote,3*1000);
+	//printf("on_disconnected\n");
+	kn_stream_connect(c,NULL,&remote,NULL,3*1000);
 }
 
-static void on_connected(kn_stream_client_t client,kn_stream_conn_t conn){
-	printf("on_connected\n");
+static void on_connected(kn_stream_client_t client,kn_stream_conn_t conn,void *_){
+	((void)_);
+	//printf("on_connected\n");
 	kn_stream_client_bind(client,conn,0,1024,on_packet,on_disconnected,
 						  0,NULL,0,NULL);
-	//wpacket_t wpk = NEW_WPK(64);
-	//wpk_write_string(wpk,"hello kenny");
-	//kn_stream_conn_send(conn,wpk);							  
+	wpacket_t wpk = NEW_WPK(64);
+	wpk_write_string(wpk,"hello kenny");
+	kn_stream_conn_send(conn,wpk);							  
 }
 
-static void on_connect_failed(kn_stream_client_t client,kn_sockaddr *addr,int err)
-{
+//kn_stream_client_t,kn_sockaddr*,int err,void *ud
+static void on_connect_failed(kn_stream_client_t client,kn_sockaddr *addr,int err,void *_)
+{	
+		((void)_);
 		printf("connect_fail\n");
 }
 
@@ -40,7 +43,7 @@ int main(int argc,char **argv)
 	
 	int i = 0;
 	for(; i < client_count; ++i){
-		kn_stream_connect(c,NULL,&remote,3*1000);
+		kn_stream_connect(c,NULL,&remote,NULL,3*1000);
 	}
 	
 	while(1){
