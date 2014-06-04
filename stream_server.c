@@ -8,8 +8,8 @@ uint32_t recvcount;
 
 int  on_packet(kn_stream_conn_t conn,rpacket_t rpk){
 	++recvcount;
-	kn_stream_conn_send(conn,wpk_create_by_rpacket(rpk));
-	kn_stream_conn_close(conn);
+	//kn_stream_conn_send(conn,wpk_create_by_rpacket(rpk));
+	//kn_stream_conn_close(conn);
 	return 1;
 }
 
@@ -39,7 +39,7 @@ int main(int argc,char **argv)
 		if(now - tick > 1000)
 		{
             uint32_t elapse = (uint32_t)(now-tick);
-            recvcount = (recvcount/elapse)*1000;
+            recvcount = recvcount*1000/elapse;
 			printf("client_count:%d,recvcount:%d/s,buffer_count:%u\n",client_count,recvcount,buffer_count);
 			tick = now;
 			recvcount = 0;

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <execinfo.h>
+#include <unistd.h>
 #include "kn_exception.h"
 #include "kn_except.h"
 
@@ -97,7 +98,7 @@ static inline kn_callstack_frame * get_csf(kn_list *pool)
 
 void kn_exception_throw(int32_t code,const char *file,const char *func,int32_t line)
 {
-	void*                   bt[20];
+	void*                   bt[64];
     char**                  strings;
     size_t                  sz;
     int                     i;
@@ -105,12 +106,15 @@ void kn_exception_throw(int32_t code,const char *file,const char *func,int32_t l
 	kn_exception_perthd_st* epst;
 	kn_callstack_frame*     call_frame;
     kn_exception_frame*     frame = kn_expstack_top();
+    char cmd[1024] = "addr2line -C -f -e ";
+    char* prog = cmd + strlen(cmd);
+    readlink("/proc/self/exe", prog, sizeof(cmd) - (prog-cmd)-1);
     if(frame)
     {
         frame->exception = code;
         frame->line = line;
         frame->is_process = 0;
-        sz = backtrace(bt, 20);
+        sz = backtrace(bt, 64);
         strings = backtrace_symbols(bt, sz);
         epst = (kn_exception_perthd_st*)pthread_getspecific(g_exception_key);
 		for(i = 0; i < sz; ++i){
@@ -123,6 +127,18 @@ void kn_exception_throw(int32_t code,const char *file,const char *func,int32_t l
             call_frame = get_csf(&epst->csf_pool);
             snprintf(call_frame->info,256,"%s\n",strings[i]);
             kn_list_pushback(&frame->call_stack,&call_frame->node);
+            
+            char *str = strstr(strings[i],"[");
+            str = str+1;
+            str[strlen(str)-1] = '\0'; 
+			FILE* fp = popen(cmd, "w");
+			if (!fp)
+			{
+				perror("popen");
+				exit(0);
+			}            
+            fprintf(fp, "%s\n", str);
+			fclose(fp);   
             if(strstr(strings[i],"main+"))
                 break;
         }
@@ -134,7 +150,7 @@ void kn_exception_throw(int32_t code,const char *file,const char *func,int32_t l
     }
 	else
 	{
-        sz = backtrace(bt, 20);
+        sz = backtrace(bt, 64);
         strings = backtrace_symbols(bt, sz);
 		for(i = 0; i < sz; ++i){
             if(strstr(strings[i],"exception_throw+")){

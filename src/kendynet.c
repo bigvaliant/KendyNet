@@ -293,10 +293,10 @@ int32_t kn_proactor_bind(kn_proactor_t p ,kn_fd_t s,kn_cb_transfer cb){
 void kn_closefd(kn_fd_t s)
 {
 	assert(s);
+	if(s->type == STREAM_SOCKET || s->type == DGRAM_SOCKET){
+		((kn_datasocket_t)s)->flag = 0;
+	}
 	kn_ref_release(&s->ref);
-	/*if(s->proactor)
-		s->proactor->UnRegister(s->proactor,s);
-	kn_ref_release(&s->ref);*/
 }
 
 void kn_shutdown_recv(kn_fd_t s)

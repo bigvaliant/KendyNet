@@ -192,7 +192,7 @@ void kn_stream_conn_close(kn_stream_conn_t c){
 		kn_closefd(c->fd);
 	}else{
 		//确保待发送数据发送完毕或发送超时才调用kn_closefd
-		c->send_timeout = 30*1000;			
+		c->send_timeout = 5*1000;			
 	} 
 }
 
@@ -238,7 +238,8 @@ void RecvFinish(kn_stream_conn_t c,int32_t bytestransfer,int32_t err_code)
 	do{
 		if(bytestransfer == 0 || (bytestransfer < 0 && err_code != EAGAIN)){
 			//不处理半关闭的情况，如果读到流的结尾直接关闭连接
-			if(!c->is_close && c->on_disconnected)
+			printf("recv close\n");
+			if(c->on_disconnected)
 				c->on_disconnected(c,err_code);
 			kn_closefd(c->fd);	
 			return;
@@ -296,8 +297,9 @@ void SendFinish(kn_stream_conn_t c,int32_t bytestransfer,int32_t err_code)
 {
 	do{
 		if(bytestransfer == 0 || (bytestransfer < 0 && err_code != EAGAIN)){
+			//printf("send close\n");
 			//不处理半关闭的情况，如果对端关闭读直接关闭连接
-			if(!c->is_close && c->on_disconnected)
+			if(c->on_disconnected)
 				c->on_disconnected(c,err_code);
 			kn_closefd(c->fd);	
 			return;
@@ -309,6 +311,7 @@ void SendFinish(kn_stream_conn_t c,int32_t bytestransfer,int32_t err_code)
 				    c->doing_send = 0;
 				    if(c->is_close){
 						//数据发送完毕且收到关闭请求，可以安全关闭了
+						//printf("send finish close,%d\n",bytestransfer);
 						c->on_disconnected(c,0); 
 						kn_closefd(c->fd);
 					}
