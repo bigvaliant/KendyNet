@@ -20,52 +20,18 @@
 #include <stdint.h>
 #include "minheap.h"
 
+typedef struct kn_timermgr *kn_timermgr_t;
+typedef struct kn_timer *kn_timer_t;
 
-typedef struct kn_timer* kn_timer_t;
-struct kn_timer_item;
-
-//如果返回1则timer_callback调用完之后会释放掉timer_item
-typedef int (*timer_callback)(kn_timer_t,struct kn_timer_item*,void*,uint64_t now);
-
-
-kn_timer_t kn_new_timer();
-void       kn_delete_timer(kn_timer_t);
-
-//更新定时器
-void kn_update_timer(kn_timer_t,uint64_t now);
-struct kn_timer_item* kn_register_timer(kn_timer_t,struct kn_timer_item*,timer_callback,void *ud,uint64_t timeout);
-void kn_unregister_timer(struct kn_timer_item **);    
+kn_timermgr_t kn_new_timermgr();
+void          kn_del_timermgr(kn_timermgr_t);
+void          kn_timermgr_tick(kn_timermgr_t);
 
 
-/*    
-#include "dlist.h"
+typedef int  (*kn_cb_timer)(kn_timer_t);//如果返回1继续注册，否则不再注册
+kn_timer_t    kn_reg_timer(kn_timermgr_t,uint64_t timeout,kn_cb_timer cb,void *ud);
+void          kn_del_timer(kn_timer_t);//销毁timer并从timermgr中取消注册
+void*         kn_timer_getud(kn_timer_t);
 
-//6级时间轮，最大到年，最小到豪秒
-enum
-{
-    SEC = 0,
-	MIN,
-	HOUR,
-	DAY,
-	YEAR,
-	SIZE,
-};
-
-struct timer;
-struct timer_item
-{
-    struct dnode dlnode;
-	void  *ud_ptr;
-	void (*callback)(struct timer*,struct timer_item*,void*);
-};
-
-void   init_timer_item(struct timer_item*);
-struct timer *new_timer();
-void   delete_timer(struct timer**);
-//更新定时器
-void update_timer(struct timer*,time_t now);
-int8_t register_timer(struct timer*,struct timer_item*,time_t timeout);
-void unregister_timer(struct timer_item*);
-*/
 
 #endif

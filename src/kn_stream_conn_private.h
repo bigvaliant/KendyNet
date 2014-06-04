@@ -54,7 +54,7 @@ struct kn_stream_conn
 	buffer_t unpack_buf;
     kn_list  send_list;//待发送的包
 	uint64_t last_recv;
-	struct   kn_timer_item *_timer_item;
+	//struct   kn_timer_item *_timer_item;
 	uint32_t recv_timeout;
     uint32_t send_timeout;
 	uint8_t  raw;

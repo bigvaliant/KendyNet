@@ -3,212 +3,217 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "kn_time.h"
-/*
-struct wheel
-{
-	time_t   round_time;
-	uint32_t cur_idx;
-	uint32_t size;
-    struct dlist wheel[0];
-};
+#include "kn_dlist.h"
 
-struct timer
-{
-	struct wheel *wheels[SIZE];
-	time_t init_time; 
-};
-
-
-static inline uint32_t cal_index(time_t elapse,int8_t type)
-{
-	if(type == MIN) return elapse%60;
-	else if(type == HOUR) return (elapse/60)%60;
-	else if(type == DAY) return (elapse/3600)%24;
-	else if(type == YEAR) return (elapse/(3600*24))%365;
-	assert(0);
-	return 0;
-}
-
-static uint32_t _mod[SIZE] = {60,60,24,365};
-static uint32_t _round_time[SIZE] = {60,60*60,60*60*24,60*60*24*365};
-
-void   init_timer_item(struct timer_item *item)
-{
-    item->dlnode.pre = item->dlnode.next = NULL;
-    item->ud_ptr = NULL;
-}
-
-static inline void active(struct timer *timer,struct dlist *wheel)
-{
-    struct dnode *node = NULL;
-    while((node = dlist_pop(wheel)) != NULL){
-		struct timer_item *item = (struct timer_item*)node;
-		item->callback(timer,item,item->ud_ptr);
-	}
-}
-
-void update_timer(struct timer *timer,time_t now)
-{
-	time_t elapse = now - timer->init_time;
-	int8_t type = MIN;
-	for(; type < SIZE; ++type){
-	    struct wheel *wheel = timer->wheels[type];
-		uint32_t new_idx = cal_index(elapse,type);
-		while(wheel->cur_idx != new_idx)
-		{
-			if(type == MIN)
-				active(timer,&wheel->wheel[wheel->cur_idx]);
-			else{
-				struct wheel *lower = timer->wheels[type-1];
-                dlist_move(&lower->wheel[0],&wheel->wheel[wheel->cur_idx]);
-			}
-			wheel->cur_idx = (wheel->cur_idx + 1) % _mod[type];
-			if(wheel->cur_idx == 0){
-                wheel->round_time += _round_time[type];
-                break;
-			}
-		}
-		if(wheel->cur_idx != 0) return;
-	}
-}
-
-static inline int32_t Add(struct wheel *wheel,struct timer_item *item,
-						  time_t timeout,time_t elapse,int8_t type)
-{
-	if(timeout < wheel->round_time){
-		uint32_t idx = cal_index(elapse,type);
-		assert(idx < wheel->size);
-        dlist_push(&wheel->wheel[idx],(struct dnode*)item);
-		return 1;
-	}
-	return 0;
-}
-
-int8_t register_timer(struct timer *timer,struct timer_item *item,time_t timeout)
-{
-	time_t now = time(NULL);
-	timeout = now + timeout;
-	time_t elapse = now - timer->init_time;
-	int8_t i = MIN;
-	for( ; i < SIZE; ++i){
-		if(Add(timer->wheels[i],item,timeout,elapse,i))
-			return 0;
-	}
-	return -1;
-}
-
-void unregister_timer(struct timer_item *item)
-{
-    dlist_remove((struct dnode *)item);
-}
-
-struct wheel* new_wheel(uint32_t size)
-{
-    struct wheel *wheel = calloc(1,sizeof(*wheel) + size*sizeof(struct dlist));
-	wheel->size = size;
-	wheel->cur_idx = 0;
-	int32_t i = 0;
-    for(; i < size; ++i) dlist_init(&wheel->wheel[i]);
-	return wheel;
-}
-
-struct timer* new_timer()
-{
-	struct timer *timer = calloc(1,sizeof(*timer));
-	timer->init_time = time(NULL);
-	int type = MIN;
-	for( ; type < SIZE; ++type){
-        timer->wheels[type] = new_wheel(_mod[type]);
-        timer->wheels[type]->round_time = timer->init_time + _round_time[type];
-	}
-	return timer;
-}
-
-void   delete_timer(struct timer **timer)
-{
-	int32_t i = 0;
-	for(; i < SIZE; ++i) free((*timer)->wheels[i]);
-	free(*timer);
-	*timer = NULL;
-}
-*/
-
-
-struct kn_timer_item
-{
-    struct heapele _heapele;
-    uint64_t       _timeout;
-    void*          _ud;
-    int (*_callback)(kn_timer_t,struct kn_timer_item*,void*,uint64_t);
-};
-
-typedef struct kn_timer
-{
-	minheap_t _minheap;
+typedef struct kn_timer{
+	kn_dlist_node node;             //同一时间过期的timer被连接在一起
+	uint64_t      ms;
+	uint64_t      timeout;
+	void          *ud;
+	kn_cb_timer   timeout_callback;
+	kn_timermgr_t mgr;
 }*kn_timer_t;
 
 
-static int8_t _less(struct heapele *l,struct heapele *r)//if l < r return 1,else return 0
-{
-	if(((struct kn_timer_item*)l)->_timeout < ((struct kn_timer_item*)r)->_timeout)
-		return 1;
-	return 0;
-}	
+struct timing_wheel{
+	uint8_t  type;
+	uint16_t curslot;
+	uint16_t slotsize;
+	//kn_dlist rereg;
+	kn_dlist wheel[0]; 
+};
 
 
-kn_timer_t kn_new_timer()
-{
-	kn_timer_t t = calloc(1,sizeof(*t));
-	t->_minheap = minheap_create(65536,_less);
+enum{
+	wheel_ms,   //1000
+	wheel_sec,  //60
+	wheel_min,  //60
+	wheel_hour, //24
+	wheel_day, //60 定时器最大计量60天内的时间
+	wheel_max,
+};
+
+struct timing_wheel* new_timing_wheel(uint8_t type){
+	struct timing_wheel *wheel;
+	if(type == wheel_ms){
+		wheel = calloc(1,sizeof(*wheel)*1000*sizeof(kn_dlist));
+		wheel->slotsize = 1000;
+	}else if(type == wheel_sec || type == wheel_min){
+		wheel = calloc(1,sizeof(*wheel)*60*sizeof(kn_dlist));
+		wheel->slotsize = 60;
+	}else if(type == wheel_hour){
+		wheel = calloc(1,sizeof(*wheel)*24*sizeof(kn_dlist));
+		wheel->slotsize = 24;	
+	}else if(type == wheel_day){
+		wheel = calloc(1,sizeof(*wheel)*60*sizeof(kn_dlist));
+		wheel->slotsize = 60;
+	}else 
+		return NULL;
+
+	wheel->type = type;
+	uint16_t i = 0;
+	for(; i < wheel->slotsize; ++i){
+		kn_dlist_init(&wheel->wheel[i]);
+	}
+	//kn_dlist_init(&wheel->rereg);
+	return wheel;	
+}
+
+static void timing_wheel_add(struct timing_wheel *wheel,kn_timer_t timer){
+	uint16_t index;
+	uint64_t delta = timer->timeout - kn_systemms64();
+	if(wheel->type == wheel_ms)
+		index = wheel->curslot + (uint16_t)delta;
+	else if(wheel->type == wheel_sec)
+		index = wheel->curslot + (uint16_t)delta/1000;
+	else if(wheel->type == wheel_min)
+		index = wheel->curslot + (uint16_t)delta/1000/60;
+	else if(wheel->type == wheel_hour)
+		index = wheel->curslot + (uint16_t)delta/1000/60/60;
+	else if(wheel->type == wheel_day)
+		index = wheel->curslot + (uint16_t)delta/1000/60/60/24;
+	assert(index >= wheel->slotsize);
+	kn_dlist_push(&wheel->wheel[index],(kn_dlist_node*)timer);
+
+}
+
+
+typedef struct kn_timermgr{
+	struct timing_wheel *wheels[wheel_max];
+	uint64_t      last_tick;
+}*kn_timermgr_t;
+
+static void _reg_timer(kn_timer_t timer){
+	timer->timeout = timer->ms + kn_systemms64();
+	if(timer->ms < timer->mgr->wheels[wheel_ms]->slotsize - timer->mgr->wheels[wheel_ms]->curslot)
+		timing_wheel_add(timer->mgr->wheels[wheel_ms],timer);
+	else if(timer->ms/1000 < timer->mgr->wheels[wheel_sec]->slotsize - timer->mgr->wheels[wheel_sec]->curslot)
+		timing_wheel_add(timer->mgr->wheels[wheel_sec],timer);
+	else if(timer->ms/1000/60 < timer->mgr->wheels[wheel_min]->slotsize - timer->mgr->wheels[wheel_min]->curslot)
+		timing_wheel_add(timer->mgr->wheels[wheel_min],timer);
+	else if(timer->ms/1000/60/60 < timer->mgr->wheels[wheel_hour]->slotsize - timer->mgr->wheels[wheel_hour]->curslot)
+		timing_wheel_add(timer->mgr->wheels[wheel_hour],timer);
+	else if(timer->ms/1000/60/60/24 < timer->mgr->wheels[wheel_day]->slotsize - timer->mgr->wheels[wheel_day]->curslot)
+		timing_wheel_add(timer->mgr->wheels[wheel_day],timer);
+	else
+		assert(0);
+}
+
+static void tick_wheel(kn_timermgr_t t,struct timing_wheel *wheel){
+	uint8_t parent = wheel_max;
+	uint8_t child = wheel_max;
+	if(wheel->type == wheel_ms){
+		parent = wheel_sec;
+	}else if(wheel->type == wheel_sec){
+		parent = wheel_min;
+		child = wheel_ms;
+	}else if(wheel->type == wheel_min){
+		parent = wheel_hour;
+		child = wheel_sec;
+	}else if(wheel->type == wheel_hour){
+		parent = wheel_day;
+		child = wheel_min;		
+	}else if(wheel->type == wheel_day){
+		child = wheel_min;			
+	}
+
+	if(wheel->type == wheel_ms){
+		kn_dlist_node *c = kn_dlist_pop(&wheel->wheel[wheel->curslot]);
+		while(c){
+			kn_timer_t timer = (kn_timer_t)c;
+			if(timer->timeout_callback(timer)){
+				_reg_timer(timer);
+				//kn_dlist_push(&wheel->rereg,c);
+			}
+			c = kn_dlist_pop(&wheel->wheel[wheel->curslot]);
+		}
+	}else{
+		kn_dlist_node *c = kn_dlist_pop(&wheel->wheel[wheel->curslot]);
+		while(c){
+			timing_wheel_add(t->wheels[child],(kn_timer_t)c);
+			c = kn_dlist_pop(&wheel->wheel[wheel->curslot]);
+		}
+	}
+
+	if(wheel->type == wheel_day)
+		wheel->curslot = (wheel->curslot+1)%wheel->slotsize;
+	else{
+		wheel->curslot += 1;
+		if(wheel->curslot >= wheel->slotsize){
+			wheel->curslot = 0;
+			tick_wheel(t,t->wheels[parent]);
+		}		
+	}
+
+	/*kn_dlist_node *c = kn_dlist_pop(&wheel->rereg);
+	while(c){
+		_reg_timer((kn_timer_t)c);
+		c = kn_dlist_pop(&wheel->rereg);
+	}*/
+
+}
+
+void kn_timermgr_tick(kn_timermgr_t t){
+	uint64_t now =  kn_systemms64();
+	uint64_t elapse = now - t->last_tick;
+	while(elapse > 0){
+		tick_wheel(t,t->wheels[wheel_ms]);
+		elapse--;
+	}
+	t->last_tick = now;
+}
+
+static uint64_t MAX_TIMEOUT = (uint64_t)(60*24*3600*1000);
+
+kn_timer_t    kn_reg_timer(kn_timermgr_t t,uint64_t timeout,kn_cb_timer cb,void *ud){
+	if(timeout == 0 || timeout > MAX_TIMEOUT) return NULL;
+	kn_timer_t timer = calloc(1,sizeof(*timer));
+	timer->ud = ud;
+	timer->timeout_callback = cb;
+	timer->mgr = t;
+	timer->ms = timeout;
+	_reg_timer(timer);
+	return timer;
+}
+
+void  kn_del_timer(kn_timer_t timer){
+	if(timer->mgr)
+		kn_dlist_remove((kn_dlist_node*)timer);
+	free(timer);
+}
+
+void* kn_timer_getud(kn_timer_t timer){
+	return timer->ud;
+}
+
+void kn_del_timermgr(kn_timermgr_t t){
+	int i = 0;
+	for(; i < wheel_max; ++i){
+		int j = 0;
+		for(; j < t->wheels[i]->slotsize; ++j){
+			kn_dlist *l = &t->wheels[i]->wheel[j];
+			kn_dlist_node *c = kn_dlist_pop(l);
+			while(c){
+				free(c);
+				c = kn_dlist_pop(l);
+			}
+		}
+		free(t->wheels[i]);
+	}
+	free(t);
+}
+
+kn_timermgr_t kn_new_timermgr(){
+	kn_timermgr_t t = calloc(1,sizeof(*t));
+	int i = 0;
+	for(; i < wheel_max; ++i){
+		t->wheels[i] = new_timing_wheel(i);
+	}
+	t->last_tick = kn_systemms64();
 	return t;
 }
 
-void kn_delete_timer(kn_timer_t t)
-{
-	if(t){
-		minheap_destroy(&t->_minheap);
-		free(t);
-	}
-}
 
 
-void kn_update_timer(kn_timer_t t,uint64_t now)
-{
-	struct kn_timer_item *item;
-	while(NULL != (item = (struct kn_timer_item*)minheap_min(t->_minheap))){
-		if(NULL == item->_ud){
-			minheap_popmin(t->_minheap);
-			free(item);
-		}else if(now >= item->_timeout){
-			minheap_popmin(t->_minheap);
-			if(item->_callback(t,item,item->_ud,now))
-				free(item);
-		}else
-			break; 
-	}
-}
 
-struct kn_timer_item* kn_register_timer(kn_timer_t t,
-									 struct kn_timer_item *item,
-									 timer_callback cb,
-									 void *ud,
-									 uint64_t timeout)
-{
-	if(!item){
-		item = calloc(1,sizeof(*item));
-		item->_ud = ud;
-		item->_callback = cb;
-	}
-	item->_timeout = kn_systemms64()+timeout;
-	minheap_insert(t->_minheap,(struct heapele*)item);
-	return item;
-}
 
-void kn_unregister_timer(struct kn_timer_item **item)
-{	
-	//不需要释放item,update中发现_ud==NULL释放
-	if(item && *item){
-		(*item)->_ud = NULL;
-		*item = NULL;
-	}
-}  

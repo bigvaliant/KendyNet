@@ -159,8 +159,8 @@ static void stream_conn_destroy(void *ptr)
 {
 	kn_fd_t fd = (kn_fd_t)((char*)ptr - sizeof(kn_dlist_node));
 	kn_stream_conn_t c = (kn_stream_conn_t)fd->ud;
-	if(c->_timer_item)
-		kn_unregister_timer(&c->_timer_item);
+	//if(c->_timer_item)
+	//	kn_unregister_timer(&c->_timer_item);
     wpacket_t w;
     while((w = (wpacket_t)kn_list_pop(&c->send_list))!=NULL)
         wpk_destroy(w);
