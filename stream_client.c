@@ -31,6 +31,7 @@ static void on_connect_failed(kn_stream_client_t client,kn_sockaddr *addr,int er
 {	
 		((void)_);
 		printf("connect_fail\n");
+		kn_stream_connect(c,NULL,&remote,NULL,3*1000);
 }
 
 int main(int argc,char **argv)
