@@ -72,7 +72,7 @@ static void timing_wheel_add(struct timing_wheel *wheel,kn_timer_t timer){
 		index = wheel->curslot + (uint16_t)delta/1000/60/60;
 	else if(wheel->type == wheel_day)
 		index = wheel->curslot + (uint16_t)delta/1000/60/60/24;
-	assert(index >= wheel->slotsize);
+	assert(index < wheel->slotsize);
 	kn_dlist_push(&wheel->wheel[index],(kn_dlist_node*)timer);
 
 }
