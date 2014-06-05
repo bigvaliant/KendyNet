@@ -86,7 +86,7 @@ testheap:testminheap.c kendynet.a
 testexcp:kendynet.a testexception.c
 	$(CC) $(CFLAGS) -o testexcp testexception.c kendynet.a $(INCLUDE) $(LDFLAGS)	$(DEFINE) -rdynamic -ldl
 	
-testtimer:kendynet.a testexception.c
+testtimer:kendynet.a testtimer.c
 	$(CC) $(CFLAGS) -o testtimer testtimer.c kendynet.a $(INCLUDE) $(LDFLAGS)	$(DEFINE) -rdynamic -ldl	
 
 	

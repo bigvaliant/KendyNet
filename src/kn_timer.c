@@ -19,7 +19,6 @@ struct timing_wheel{
 	uint8_t  type;
 	uint16_t curslot;
 	uint16_t slotsize;
-	//kn_dlist rereg;
 	kn_dlist wheel[0]; 
 };
 
@@ -38,15 +37,13 @@ struct timing_wheel* new_timing_wheel(uint8_t type){
 	if(type == wheel_ms){
 		wheel = calloc(1,sizeof(*wheel)*1000*sizeof(kn_dlist));
 		wheel->slotsize = 1000;
-	}else if(type == wheel_sec || type == wheel_min){
+		wheel->curslot = 1;
+	}else if(type == wheel_sec || type == wheel_min || type == wheel_day){
 		wheel = calloc(1,sizeof(*wheel)*60*sizeof(kn_dlist));
 		wheel->slotsize = 60;
 	}else if(type == wheel_hour){
 		wheel = calloc(1,sizeof(*wheel)*24*sizeof(kn_dlist));
 		wheel->slotsize = 24;	
-	}else if(type == wheel_day){
-		wheel = calloc(1,sizeof(*wheel)*60*sizeof(kn_dlist));
-		wheel->slotsize = 60;
 	}else 
 		return NULL;
 
@@ -55,24 +52,49 @@ struct timing_wheel* new_timing_wheel(uint8_t type){
 	for(; i < wheel->slotsize; ++i){
 		kn_dlist_init(&wheel->wheel[i]);
 	}
-	//kn_dlist_init(&wheel->rereg);
 	return wheel;	
 }
 
+
+static const uint64_t  T_SEC = 1000;
+static const uint64_t  T_MIN = 1000*60;
+static const uint64_t  T_HOUR = 1000*60*60;
+static const uint64_t  T_DAY = 1000*60*60*24;
+
+
 static void timing_wheel_add(struct timing_wheel *wheel,kn_timer_t timer){
 	uint16_t index;
-	uint64_t delta = timer->timeout - kn_systemms64();
-	if(wheel->type == wheel_ms)
-		index = wheel->curslot + (uint16_t)delta;
-	else if(wheel->type == wheel_sec)
-		index = wheel->curslot + (uint16_t)delta/1000;
-	else if(wheel->type == wheel_min)
-		index = wheel->curslot + (uint16_t)delta/1000/60;
-	else if(wheel->type == wheel_hour)
-		index = wheel->curslot + (uint16_t)delta/1000/60/60;
-	else if(wheel->type == wheel_day)
-		index = wheel->curslot + (uint16_t)delta/1000/60/60/24;
-	assert(index < wheel->slotsize);
+	uint64_t now = kn_systemms64();
+	int64_t delta = 0;
+	do{
+		if(timer->timeout > now)
+			delta = (int64_t)(timer->timeout - now);
+		else 
+			break;
+
+		if(wheel->type == wheel_ms && delta >= 1)
+			delta -= 1;
+		else if(wheel->type == wheel_sec){
+			if(delta >= T_SEC) delta -= T_SEC;
+			if(delta < T_SEC) delta = 0;
+			else delta = delta/T_SEC;
+		}else if(wheel->type == wheel_min){
+			if(delta >= T_MIN) delta -= T_MIN;
+			if(delta < T_MIN) delta = 0;
+			else delta = delta/T_MIN;
+		}else if(wheel->type == wheel_hour){
+			if(delta >= T_HOUR) delta -= T_HOUR;
+			if(delta < T_HOUR) delta = 0;
+			else delta = delta/T_HOUR;
+		}else if(wheel->type == wheel_day){
+			if(delta >= T_DAY) delta -= T_DAY;
+			if(delta < T_DAY) delta = 0;
+			else delta = delta/T_DAY;
+		}
+	}while(0);
+	
+	index = (wheel->curslot + (uint16_t)delta)%wheel->slotsize;
+	printf("%d,%d,%d\n",wheel->curslot,index,wheel->type);
 	kn_dlist_push(&wheel->wheel[index],(kn_dlist_node*)timer);
 
 }
@@ -80,12 +102,18 @@ static void timing_wheel_add(struct timing_wheel *wheel,kn_timer_t timer){
 
 typedef struct kn_timermgr{
 	struct timing_wheel *wheels[wheel_max];
+	kn_dlist      pending_reg;
 	uint64_t      last_tick;
+	uint8_t       intick;
 }*kn_timermgr_t;
 
-static void _reg_timer(kn_timer_t timer){
+static inline void _reg_timer(kn_timer_t timer){
+	if(timer->mgr->intick){
+		kn_dlist_push(&timer->mgr->pending_reg,(kn_dlist_node*)timer);	
+		return;
+	}
 	timer->timeout = timer->ms + kn_systemms64();
-	if(timer->ms < timer->mgr->wheels[wheel_ms]->slotsize - timer->mgr->wheels[wheel_ms]->curslot)
+	if(timer->ms <= timer->mgr->wheels[wheel_ms]->slotsize - timer->mgr->wheels[wheel_ms]->curslot)
 		timing_wheel_add(timer->mgr->wheels[wheel_ms],timer);
 	else if(timer->ms/1000 < timer->mgr->wheels[wheel_sec]->slotsize - timer->mgr->wheels[wheel_sec]->curslot)
 		timing_wheel_add(timer->mgr->wheels[wheel_sec],timer);
@@ -123,8 +151,9 @@ static void tick_wheel(kn_timermgr_t t,struct timing_wheel *wheel){
 			kn_timer_t timer = (kn_timer_t)c;
 			if(timer->timeout_callback(timer)){
 				_reg_timer(timer);
-				//kn_dlist_push(&wheel->rereg,c);
-			}
+			}else
+				free(timer);
+			
 			c = kn_dlist_pop(&wheel->wheel[wheel->curslot]);
 		}
 	}else{
@@ -145,20 +174,21 @@ static void tick_wheel(kn_timermgr_t t,struct timing_wheel *wheel){
 		}		
 	}
 
-	/*kn_dlist_node *c = kn_dlist_pop(&wheel->rereg);
-	while(c){
-		_reg_timer((kn_timer_t)c);
-		c = kn_dlist_pop(&wheel->rereg);
-	}*/
-
 }
 
 void kn_timermgr_tick(kn_timermgr_t t){
 	uint64_t now =  kn_systemms64();
 	uint64_t elapse = now - t->last_tick;
+	t->intick = 1;
 	while(elapse > 0){
 		tick_wheel(t,t->wheels[wheel_ms]);
 		elapse--;
+	}
+	t->intick = 0;
+	kn_dlist_node *c = kn_dlist_pop(&t->pending_reg);
+	while(c){
+		_reg_timer((kn_timer_t)c);
+		c = kn_dlist_pop(&t->pending_reg);
 	}
 	t->last_tick = now;
 }
@@ -200,6 +230,13 @@ void kn_del_timermgr(kn_timermgr_t t){
 		}
 		free(t->wheels[i]);
 	}
+
+	kn_dlist_node *c = kn_dlist_pop(&t->pending_reg);
+	while(c){
+		free(c);
+		c = kn_dlist_pop(&t->pending_reg);
+	}
+
 	free(t);
 }
 
@@ -210,10 +247,7 @@ kn_timermgr_t kn_new_timermgr(){
 		t->wheels[i] = new_timing_wheel(i);
 	}
 	t->last_tick = kn_systemms64();
+	kn_dlist_init(&t->pending_reg);
 	return t;
 }
-
-
-
-
 
