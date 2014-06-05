@@ -97,6 +97,21 @@ static inline kn_callstack_frame * get_csf(kn_list *pool)
 }
 
 
+static int addr2line(const char *addr,char *output,int size){		
+	char path[256];
+	readlink("/proc/self/exe", path, 256);	
+	string cmd("addr2line -se %s 0x%x", path, addr);
+	FILE *pipe = popen(cmd.cstr(), "r");
+	if(!pipe) return -1;
+	int i = 0;
+	char ch = fgetc(pipe);
+	while(ch != '\n' && ch != EOF && i < size){
+		output[i++] = ch;
+		ch = fgetc(pipe);
+	}
+	output[size-1] = 0;	
+	fclose(pipe);
+}
 
 
 void kn_exception_throw(int32_t code,const char *file,const char *func,int32_t line)
@@ -109,12 +124,13 @@ void kn_exception_throw(int32_t code,const char *file,const char *func,int32_t l
 	kn_exception_perthd_st* epst;
 	kn_callstack_frame*     call_frame;
 	kn_exception_frame*     frame = kn_expstack_top();
+	char                    excp_source[1024];
 	if(frame)
 	{
-		char cmd[1024] = "addr2line -C -f -e ";
-		char* prog = cmd + strlen(cmd);
-		readlink("/proc/self/exe", prog, sizeof(cmd) - (prog-cmd)-1);
-		FILE* fp = popen(cmd, "w");
+		//char cmd[1024] = "addr2line -C -f -e ";
+		//char* prog = cmd + strlen(cmd);
+		//readlink("/proc/self/exe", prog, sizeof(cmd) - (prog-cmd)-1);
+		//FILE* fp = popen(cmd, "w");
 		frame->exception = code;
 		frame->line = line;
 		frame->is_process = 0;
@@ -131,20 +147,53 @@ void kn_exception_throw(int32_t code,const char *file,const char *func,int32_t l
 			call_frame = get_csf(&epst->csf_pool);
 			snprintf(call_frame->info,1024,"%s\n",strings[i]);
 			kn_list_pushback(&frame->call_stack,&call_frame->node);
-			if(fp){		
-				char *str = strstr(strings[i],"[");
-				str = str+1;
-				str[strlen(str)-1] = '\0'; 
-				fprintf(fp, "%s\n", str);
-				fflush(fp);
+			char *str = strstr(strings[i],"[");
+			str = str+1;
+			str[strlen(str)-1] = '\0'; 		
+			if(0 == addr2line(str,excp_source,1024)){
+				printf("%s\n",excp_source);
 			}
+			//if(fp){		
+				//char *str = strstr(strings[i],"[");
+				//str = str+1;
+				//str[strlen(str)-1] = '\0'; 
+				
+				//char cmd[1024];
+				//snprintf(cmd,1024,"addr2line -se %s 0x%x")
+				
+				
+				/*				
+				string cmd("addr2line -se %s 0x%x", path, addr);
+
+						pipe = popen(cmd.cstr(), "r");
+						if ( unlikely(pipe == NULL) )
+							throw exception(
+								"failed to open pipe for command '%s' (errno %d - %s)",
+								cmd.cstr(),
+								errno,
+								strerror(errno)
+							);
+
+
+						string buf;
+						i8 ch = fgetc(pipe);
+						while ( likely(ch != '\n' && ch != EOF) ) {
+							buf.append(ch);
+							ch = fgetc(pipe);
+						}				
+								
+				*/				
+				
+				//fprintf(fp, "%s\n", str);
+				//fflush(fp);
+			//}
 			if(strstr(strings[i],"main+"))
 				break;
 		}
-		if(fp){
-			fclose(fp);
-			fp = NULL;
-		}   
+		//if(fp){
+		//	fclose(fp);
+		//	fp = NULL;
+		//}   
 		free(strings);
 		if(code == except_segv_fault) sig = SIGSEGV;
 		else if(code == except_sigbus) sig = SIGBUS;
