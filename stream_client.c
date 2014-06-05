@@ -13,7 +13,7 @@ static int  on_packet(kn_stream_conn_t conn,rpacket_t rpk){
 
 static void on_disconnected(kn_stream_conn_t conn,int err){
 	//printf("on_disconnected\n");
-	kn_stream_connect(c,NULL,&remote,NULL,3*1000);
+	kn_stream_connect(c,NULL,&remote,NULL,30*1000);
 }
 
 static void on_connected(kn_stream_client_t client,kn_stream_conn_t conn,void *_){
@@ -31,7 +31,7 @@ static void on_connect_failed(kn_stream_client_t client,kn_sockaddr *addr,int er
 {	
 		((void)_);
 		printf("connect_fail\n");
-		kn_stream_connect(c,NULL,&remote,NULL,3*1000);
+		kn_stream_connect(c,NULL,&remote,NULL,30*1000);
 }
 
 int main(int argc,char **argv)
@@ -44,7 +44,7 @@ int main(int argc,char **argv)
 	
 	int i = 0;
 	for(; i < client_count; ++i){
-		kn_stream_connect(c,NULL,&remote,NULL,3*1000);
+		kn_stream_connect(c,NULL,&remote,NULL,30*1000);
 	}
 	
 	while(1){

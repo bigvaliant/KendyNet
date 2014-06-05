@@ -8,8 +8,8 @@ uint32_t recvcount;
 
 int  on_packet(kn_stream_conn_t conn,rpacket_t rpk){
 	++recvcount;
-	//kn_stream_conn_send(conn,wpk_create_by_rpacket(rpk));
-	//kn_stream_conn_close(conn);
+	kn_stream_conn_send(conn,wpk_create_by_rpacket(rpk));
+	kn_stream_conn_close(conn);
 	return 1;
 }
 

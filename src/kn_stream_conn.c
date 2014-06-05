@@ -238,7 +238,7 @@ void RecvFinish(kn_stream_conn_t c,int32_t bytestransfer,int32_t err_code)
 	do{
 		if(bytestransfer == 0 || (bytestransfer < 0 && err_code != EAGAIN)){
 			//不处理半关闭的情况，如果读到流的结尾直接关闭连接
-			printf("recv close\n");
+			//printf("recv close\n");
 			if(c->on_disconnected)
 				c->on_disconnected(c,err_code);
 			kn_closefd(c->fd);	
