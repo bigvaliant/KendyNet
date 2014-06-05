@@ -115,13 +115,13 @@ static inline void _reg_timer(kn_timer_t timer){
 	timer->timeout = timer->ms + kn_systemms64();
 	if(timer->ms <= timer->mgr->wheels[wheel_ms]->slotsize - timer->mgr->wheels[wheel_ms]->curslot)
 		timing_wheel_add(timer->mgr->wheels[wheel_ms],timer);
-	else if(timer->ms/1000 < timer->mgr->wheels[wheel_sec]->slotsize - timer->mgr->wheels[wheel_sec]->curslot)
+	else if(timer->ms/T_SEC < timer->mgr->wheels[wheel_sec]->slotsize - timer->mgr->wheels[wheel_sec]->curslot)
 		timing_wheel_add(timer->mgr->wheels[wheel_sec],timer);
-	else if(timer->ms/1000/60 < timer->mgr->wheels[wheel_min]->slotsize - timer->mgr->wheels[wheel_min]->curslot)
+	else if(timer->ms/T_MIN < timer->mgr->wheels[wheel_min]->slotsize - timer->mgr->wheels[wheel_min]->curslot)
 		timing_wheel_add(timer->mgr->wheels[wheel_min],timer);
-	else if(timer->ms/1000/60/60 < timer->mgr->wheels[wheel_hour]->slotsize - timer->mgr->wheels[wheel_hour]->curslot)
+	else if(timer->ms/T_HOUR < timer->mgr->wheels[wheel_hour]->slotsize - timer->mgr->wheels[wheel_hour]->curslot)
 		timing_wheel_add(timer->mgr->wheels[wheel_hour],timer);
-	else if(timer->ms/1000/60/60/24 < timer->mgr->wheels[wheel_day]->slotsize - timer->mgr->wheels[wheel_day]->curslot)
+	else if(timer->ms/T_DAY < timer->mgr->wheels[wheel_day]->slotsize - timer->mgr->wheels[wheel_day]->curslot)
 		timing_wheel_add(timer->mgr->wheels[wheel_day],timer);
 	else
 		assert(0);
@@ -151,8 +151,8 @@ static void tick_wheel(kn_timermgr_t t,struct timing_wheel *wheel){
 			kn_timer_t timer = (kn_timer_t)c;
 			if(timer->timeout_callback(timer)){
 				_reg_timer(timer);
-			}else
-				free(timer);
+			}/*else
+				free(timer);*/
 			
 			c = kn_dlist_pop(&wheel->wheel[wheel->curslot]);
 		}
