@@ -30,7 +30,7 @@
 typedef struct kn_callstack_frame
 {
     kn_list_node node;
-    char  info[256];
+    char  info[1024];
 }kn_callstack_frame;
 
 typedef struct kn_exception_frame

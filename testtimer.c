@@ -30,7 +30,7 @@ int main(){
 	st3.ms = 3600*1000;//+59*1000;
 	st3.expecttime = kn_systemms64()+st3.ms;
 	
-	kn_reg_timer(timermgr,st1.ms,timer_callback,&st1);
+	//kn_reg_timer(timermgr,st1.ms,timer_callback,&st1);
 	kn_reg_timer(timermgr,st2.ms,timer_callback,&st2);
 	kn_reg_timer(timermgr,st3.ms,timer_callback,&st3);
 	

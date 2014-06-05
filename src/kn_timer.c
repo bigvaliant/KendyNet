@@ -37,7 +37,6 @@ struct timing_wheel* new_timing_wheel(uint8_t type){
 	if(type == wheel_ms){
 		wheel = calloc(1,sizeof(*wheel)*1000*sizeof(kn_dlist));
 		wheel->slotsize = 1000;
-		wheel->curslot = 1;
 	}else if(type == wheel_sec || type == wheel_min || type == wheel_day){
 		wheel = calloc(1,sizeof(*wheel)*60*sizeof(kn_dlist));
 		wheel->slotsize = 60;
@@ -47,6 +46,7 @@ struct timing_wheel* new_timing_wheel(uint8_t type){
 	}else 
 		return NULL;
 
+	wheel->curslot = 1;
 	wheel->type = type;
 	uint16_t i = 0;
 	for(; i < wheel->slotsize; ++i){
