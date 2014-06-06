@@ -22,10 +22,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <pthread.h>
+#include <signal.h>
 #include "kn_list.h"
 #include "kn_exception.h"
 
-//#include "log.h"
+#include "log.h"
 
 typedef struct kn_callstack_frame
 {
@@ -36,11 +37,12 @@ typedef struct kn_callstack_frame
 typedef struct kn_exception_frame
 {
     kn_list_node   node;
-	sigjmp_buf jumpbuffer;
-	int32_t exception;
-	int32_t line; 
+    sigjmp_buf jumpbuffer;
+    int32_t exception;
+    int32_t line; 
     const char   *file;
     const char   *func;
+    void         *addr;
     int8_t  is_process;
     struct kn_list  call_stack; //函数调用栈记录 
 	
@@ -65,20 +67,23 @@ static inline void kn_clear_callstack(kn_exception_frame *frame)
 		kn_list_pushback(&epst->csf_pool,kn_list_pop(&frame->call_stack));
 }
 
-/*
-static inline void print_call_stack(struct exception_frame *frame)
+
+static inline void print_call_stack(struct kn_exception_frame *frame)
 {
     if(!frame)return;
     char buf[MAX_LOG_SIZE];
     char *ptr = buf;
     int32_t size = 0;
-    struct lnode *node = llist_head(&frame->call_stack);
+    kn_list_node *node = kn_list_head(&frame->call_stack);
     int f = 0;
-    size += snprintf(ptr,MAX_LOG_SIZE,"%s\n",exception_description(frame->exception));
+    if(frame->exception == except_segv_fault)
+	    size += snprintf(ptr,MAX_LOG_SIZE,"%s[invaild access addr:%p]\n",kn_exception_description(frame->exception),frame->addr);
+    else
+	    size += snprintf(ptr,MAX_LOG_SIZE,"%s\n",kn_exception_description(frame->exception));
     ptr = buf+size;
     while(node != NULL && size < MAX_LOG_SIZE)
     {
-        struct callstack_frame *cf = (struct callstack_frame*)node;
+        struct kn_callstack_frame *cf = (struct kn_callstack_frame*)node;
         size += snprintf(ptr,MAX_LOG_SIZE-size,"% 2d: %s",++f,cf->info);
         ptr = buf+size;
         node = node->next;
@@ -87,7 +92,7 @@ static inline void print_call_stack(struct exception_frame *frame)
 }
 
 #define PRINT_CALL_STACK print_call_stack(&frame)
-*/
+
 
 static inline kn_list *kn_GetCurrentThdExceptionStack()
 {
@@ -128,7 +133,7 @@ static inline kn_exception_frame* kn_expstack_top()
     return (struct kn_exception_frame*)kn_list_head(expstack);
 }
 
-extern void kn_exception_throw(int32_t code,const char *file,const char *func,int32_t line);
+extern void kn_exception_throw(int32_t code,const char *file,const char *func,int32_t line,siginfo_t* info);
 
 #define TRY do{\
 	kn_exception_frame  frame;\
@@ -142,7 +147,7 @@ extern void kn_exception_throw(int32_t code,const char *file,const char *func,in
     int savesigs= SIGSEGV | SIGBUS | SIGFPE;\
 	if(sigsetjmp(frame.jumpbuffer,savesigs) == 0)
 	
-#define THROW(EXP) kn_exception_throw(EXP,__FILE__,__FUNCTION__,__LINE__)
+#define THROW(EXP) kn_exception_throw(EXP,__FILE__,__FUNCTION__,__LINE__,NULL)
 
 #define CATCH(EXP) else if(!frame.is_process && frame.exception == EXP?\
                         frame.is_process=1,frame.is_process:frame.is_process)
@@ -151,7 +156,7 @@ extern void kn_exception_throw(int32_t code,const char *file,const char *func,in
                         frame.is_process=1,frame.is_process:frame.is_process)
 
 #define ENDTRY if(!frame.is_process)\
-                    kn_exception_throw(frame.exception,frame.file,frame.func,frame.line);\
+                    kn_exception_throw(frame.exception,frame.file,frame.func,frame.line,NULL);\
                else {\
                     kn_exception_frame *frame = kn_expstack_pop();\
                     kn_clear_callstack(frame);\

@@ -86,7 +86,7 @@ void entry1()
     }CATCH(except_segv_fault)
     {
         printf("catch:%s stack below\n",kn_exception_description(EXPNO));
-        //PRINT_CALL_STACK;
+        PRINT_CALL_STACK;
     }CATCH_ALL
     {
         printf("catch all: %s\n",kn_exception_description(EXPNO));
@@ -95,14 +95,17 @@ void entry1()
     return;
 }
 
+
+struct testst{
+	int a;
+	int b;
+};
+
 void func2()
 {
-    //printf("func2\n");
-    int *a = NULL;
-    printf("%d\n",*a);
+    struct testst *a = NULL;
+    printf("%d\n",a->b);
     
-    //int a = 10;
-    //printf("%d\n",1/0);
     printf("func2 end\n");
 }
 
@@ -113,10 +116,10 @@ void entry2()
     }CATCH(except_arith)
     {
         //printf("catch:%s stack below\n",exception_description(EXPNO));
-        //PRINT_CALL_STACK;
+        PRINT_CALL_STACK;
     }CATCH_ALL
     {
-        //PRINT_CALL_STACK;
+        PRINT_CALL_STACK;
         //printf("catch all: %s\n",exception_description(EXPNO));
     }ENDTRY;
     
@@ -135,7 +138,7 @@ void *Routine1(void *arg)
     }CATCH_ALL
     {
         printf("catch all: %s\n",kn_exception_description(EXPNO));
-        //PRINT_CALL_STACK;
+        PRINT_CALL_STACK;
     }ENDTRY;
     
     return NULL;

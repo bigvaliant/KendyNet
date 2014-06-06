@@ -22,7 +22,7 @@ static void delete_thd_exstack(void  *arg)
 
 int setup_sigsegv();
 static void signal_segv(int signum,siginfo_t* info, void*ptr){
-	THROW(except_segv_fault);
+	kn_exception_throw(except_segv_fault,__FILE__,__FUNCTION__,__LINE__,info);
 	return;
 }
 
@@ -101,22 +101,24 @@ static int addr2line(const char *addr,char *output,int size){
 	char path[256]={0};
 	readlink("/proc/self/exe", path, 256);	
 	char cmd[1024];
-	snprintf(cmd,1024,"addr2line -Cfse %s %s", path, addr);
+	int i = 0;
+	snprintf(cmd,1024,"addr2line -fCse %s %s", path, addr);
 	FILE *pipe = popen(cmd, "r");
 	if(!pipe) return -1;
-	int i = 0;
 	char ch = fgetc(pipe);
 	while(ch != EOF && i < size){
+		if(ch == '\n') ch = ' ';
 		output[i++] = ch;
 		ch = fgetc(pipe);
 	}
-	output[i] = 0;	
+		
 	fclose(pipe);
+	output[i] = '\n';	
 	return 0;
 }
 
 
-void kn_exception_throw(int32_t code,const char *file,const char *func,int32_t line)
+void kn_exception_throw(int32_t code,const char *file,const char *func,int32_t line,siginfo_t* info)
 {
 	void*                   bt[64];
 	char**                  strings;
@@ -131,6 +133,7 @@ void kn_exception_throw(int32_t code,const char *file,const char *func,int32_t l
 		frame->exception = code;
 		frame->line = line;
 		frame->is_process = 0;
+		if(info)frame->addr = info->si_addr;
 		sz = backtrace(bt, 64);
 		strings = backtrace_symbols(bt, sz);
 		epst = (kn_exception_perthd_st*)pthread_getspecific(g_exception_key);
