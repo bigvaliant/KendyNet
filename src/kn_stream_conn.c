@@ -6,12 +6,12 @@
 
 static inline void update_next_recv_pos(kn_stream_conn_t c,int32_t _bytestransfer)
 {
-    assert(_bytestransfer >= 0);
-    uint32_t bytestransfer = (uint32_t)_bytestransfer;
-    uint32_t size;
+	assert(_bytestransfer >= 0);
+	uint32_t bytestransfer = (uint32_t)_bytestransfer;
+	uint32_t size;
 	do{
 		size = c->next_recv_buf->capacity - c->next_recv_pos;
-        size = size > bytestransfer ? bytestransfer:size;
+		size = size > bytestransfer ? bytestransfer:size;
 		c->next_recv_buf->size += size;
 		c->next_recv_pos += size;
 		bytestransfer -= size;
@@ -63,7 +63,7 @@ static inline int unpack(kn_stream_conn_t c)
 		else
 		{
 			pk_len = c->unpack_buf->size - c->unpack_pos;
-            if(!pk_len) return 1;
+			if(!pk_len) return 1;
 			r = rpk_create(c->unpack_buf,c->unpack_pos,pk_len,c->raw);
 			c->unpack_pos  += pk_len;
 			c->unpack_size -= pk_len;
@@ -85,7 +85,7 @@ static inline int unpack(kn_stream_conn_t c)
 static inline st_io *prepare_send(kn_stream_conn_t c)
 {
 	int32_t i = 0;
-    wpacket_t w = (wpacket_t)kn_list_head(&c->send_list);
+	wpacket_t w = (wpacket_t)kn_list_head(&c->send_list);
 	buffer_t b;
 	uint32_t pos;
 	st_io *O = NULL;
@@ -110,7 +110,7 @@ static inline st_io *prepare_send(kn_stream_conn_t c)
 			b = b->next;
 			pos = 0;
 		}
-        if(send_size_remain > 0) w = (wpacket_t)MSG_NEXT(w);//(wpacket_t)w->base.next.next;
+		if(send_size_remain > 0) w = (wpacket_t)MSG_NEXT(w);//(wpacket_t)w->base.next.next;
 	}
 	if(i){
 		c->send_overlap.iovec_count = i;
@@ -122,13 +122,13 @@ static inline st_io *prepare_send(kn_stream_conn_t c)
 }
 static inline void update_send_list(kn_stream_conn_t c,int32_t _bytestransfer)
 {
-    assert(_bytestransfer >= 0);
+	assert(_bytestransfer >= 0);
 	wpacket_t w;
-    uint32_t bytestransfer = (uint32_t)_bytestransfer;
+	uint32_t bytestransfer = (uint32_t)_bytestransfer;
 	uint32_t size;
 	while(bytestransfer)
 	{
-        w = (wpacket_t)kn_list_pop(&c->send_list);
+		w = (wpacket_t)kn_list_pop(&c->send_list);
 		assert(w);
 		if((uint32_t)bytestransfer >= w->data_size)
 		{
@@ -159,13 +159,12 @@ static void stream_conn_destroy(void *ptr)
 {
 	kn_fd_t fd = (kn_fd_t)((char*)ptr - sizeof(kn_dlist_node));
 	kn_stream_conn_t c = (kn_stream_conn_t)fd->ud;
-	//if(c->_timer_item)
-	//	kn_unregister_timer(&c->_timer_item);
-    wpacket_t w;
-    while((w = (wpacket_t)kn_list_pop(&c->send_list))!=NULL)
-        wpk_destroy(w);
-    buffer_release(&c->unpack_buf);
-    buffer_release(&c->next_recv_buf);		
+	if(c->timer) kn_del_timer(c->timer);
+	wpacket_t w;
+	while((w = (wpacket_t)kn_list_pop(&c->send_list))!=NULL)
+		wpk_destroy(w);
+	buffer_release(&c->unpack_buf);
+	buffer_release(&c->next_recv_buf);		
 	c->fd_destroy_fn(ptr);
 	if(c->service){
 		kn_dlist_remove((kn_dlist_node*)c);
@@ -206,10 +205,10 @@ int32_t kn_stream_conn_send(kn_stream_conn_t c,wpacket_t w)
 	st_io *O;
 	if(w){
 		w->base.tstamp = kn_systemms64();
-        kn_list_pushback(&c->send_list,(kn_list_node*)w);
+		kn_list_pushback(&c->send_list,(kn_list_node*)w);
 	}
 	if(!c->doing_send){
-	    c->doing_send = 1;
+		c->doing_send = 1;
 		O = prepare_send(c);
 		if(O) return kn_post_send(c->fd,O);
 	}
@@ -305,11 +304,11 @@ void SendFinish(kn_stream_conn_t c,int32_t bytestransfer,int32_t err_code)
 			return;
 		}else if(bytestransfer > 0){
 			do{
-                update_send_list(c,bytestransfer);
+				update_send_list(c,bytestransfer);
 				st_io *io = prepare_send(c);
 				if(!io) {
-				    c->doing_send = 0;
-				    if(c->is_close){
+					c->doing_send = 0;
+					if(c->is_close){
 						//数据发送完毕且收到关闭请求，可以安全关闭了
 						//printf("send finish close,%d\n",bytestransfer);
 						c->on_disconnected(c,0); 
@@ -327,11 +326,11 @@ void SendFinish(kn_stream_conn_t c,int32_t bytestransfer,int32_t err_code)
 void IoFinish(kn_fd_t fd,st_io *io,int32_t bytestransfer,int32_t err_code)
 {
 	kn_stream_conn_t c = kn_fd_getud(fd);
-    if(io == (st_io*)&c->send_overlap)
-        SendFinish(c,bytestransfer,err_code);
-    else if(io == (st_io*)&c->recv_overlap)
-        RecvFinish(c,bytestransfer,err_code);
-    else{
+	if(io == (st_io*)&c->send_overlap)
+		SendFinish(c,bytestransfer,err_code);
+	else if(io == (st_io*)&c->recv_overlap)
+		RecvFinish(c,bytestransfer,err_code);
+	else{
 		if(c->on_disconnected)
 			c->on_disconnected(c,err_code);		
 		kn_closefd(c->fd);

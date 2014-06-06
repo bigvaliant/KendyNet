@@ -224,7 +224,7 @@ int32_t kn_epoll_loop(kn_proactor_t p,int32_t ms)
 		for(i=0; i < nfds ; ++i)
 		{
 			s = (kn_fd_t)ep->events[i].data.ptr;
-			s->on_active(s,ep->events[i].events);
+			if(s) s->on_active(s,ep->events[i].events);
 		}
 		current_tick = kn_systemms64();
 	}while(timeout > current_tick);

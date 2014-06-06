@@ -94,7 +94,7 @@ static void timing_wheel_add(struct timing_wheel *wheel,kn_timer_t timer){
 	}while(0);
 	
 	index = (wheel->curslot + (uint16_t)delta)%wheel->slotsize;
-	printf("%d,%d,%d\n",wheel->curslot,index,wheel->type);
+	//printf("%d,%d,%d\n",wheel->curslot,index,wheel->type);
 	kn_dlist_push(&wheel->wheel[index],(kn_dlist_node*)timer);
 
 }

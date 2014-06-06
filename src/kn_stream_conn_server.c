@@ -9,7 +9,7 @@ typedef struct kn_stream_server{
 	void (*on_connection)(struct kn_stream_server*,kn_stream_conn_t);
 	kn_fd_t      listen_fd;
 	kn_sockaddr  server_addr;
-	//kn_timer_t   timer;
+	kn_timermgr_t   timermgr;
 }kn_stream_server,*kn_stream_server_t;
 
 static void on_new_connection(kn_fd_t fd,void *ud){
@@ -18,11 +18,12 @@ static void on_new_connection(kn_fd_t fd,void *ud){
 	assert(server->on_connection);
 	server->on_connection(server,kn_new_stream_conn(fd));
 }
-/*
-static int check_timeout(kn_timer_t timer,struct kn_timer_item *item,void *ud,uint64_t now)
+
+static int check_timeout(kn_timer_t timer)
 {	
-	int ret = 0;
-	kn_stream_conn_t conn = (kn_stream_conn_t)ud;
+	int ret = 1;
+	uint64_t now = kn_systemms64();
+	kn_stream_conn_t conn = (kn_stream_conn_t)kn_timer_getud(timer);
 	kn_fd_addref(conn->fd);
 	do{	
 		if(conn->is_close){
@@ -30,7 +31,7 @@ static int check_timeout(kn_timer_t timer,struct kn_timer_item *item,void *ud,ui
 			if(wpk && now > wpk->base.tstamp + (uint64_t)conn->send_timeout){
 				if(conn->on_disconnected) conn->on_disconnected(conn,0);
 				kn_closefd(conn->fd);
-				ret = 1;
+				ret = 0;
 			}		
 		}else{					
 			if(conn->send_timeout){
@@ -40,7 +41,7 @@ static int check_timeout(kn_timer_t timer,struct kn_timer_item *item,void *ud,ui
 					if(conn->is_close){
 						if(conn->on_disconnected) conn->on_disconnected(conn,0);
 						kn_closefd(conn->fd);
-						ret = 1;
+						ret = 0;
 						break;
 					}
 				}	
@@ -50,31 +51,29 @@ static int check_timeout(kn_timer_t timer,struct kn_timer_item *item,void *ud,ui
 					if(conn->on_recv_timeout){
 						conn->on_recv_timeout(conn);
 						if(conn->is_close && !conn->doing_send)
-							ret = 1;
+							ret = 0;
 					}else{
 						if(conn->on_disconnected) conn->on_disconnected(conn,0);
 						kn_closefd(conn->fd);
-						ret = 1;
+						ret = 0;
 					}
 				}
 			}
 		}
 	}while(0);
 	kn_fd_subref(conn->fd);
-	if(ret == 0)
-		kn_register_timer(timer,conn->_timer_item,check_timeout,conn,1000);
 	return ret;
 }
 
 void kn_stream_server_tick(struct service *s){
 	//检查连接超时
-	kn_update_timer(((kn_stream_server_t)s)->timer,kn_systemms64());
+	kn_timermgr_tick(((kn_stream_server_t)s)->timermgr);
 }
-*/
+
 
 kn_stream_server_t kn_new_stream_server(kn_proactor_t p,
-									    kn_sockaddr *serveraddr,
-									    void (*on_connect)(kn_stream_server_t,kn_stream_conn_t))
+		kn_sockaddr *serveraddr,
+		void (*on_connect)(kn_stream_server_t,kn_stream_conn_t))
 {
 	kn_fd_t l;
 	kn_stream_server_t server = calloc(1,sizeof(*server));
@@ -89,9 +88,9 @@ kn_stream_server_t kn_new_stream_server(kn_proactor_t p,
 	}
 	
 	server->on_connection = on_connect;
-	//server->timer = kn_new_timer();
+	server->timermgr = kn_new_timermgr();
 	server->proactor = p;
-	//server->base.tick = kn_stream_server_tick;
+	server->base.tick = kn_stream_server_tick;
 	kn_dlist_init(&server->base.dlist);
 	if(server->base.tick)
 		kn_dlist_push(&p->service,(kn_dlist_node*)server);
@@ -100,7 +99,7 @@ kn_stream_server_t kn_new_stream_server(kn_proactor_t p,
 
 void kn_destroy_stream_server(kn_stream_server_t server){
 	if(server->listen_fd) kn_closefd(server->listen_fd);
-	//kn_delete_timer(server->timer);
+	kn_del_timermgr(server->timermgr);
 	kn_dlist_remove((kn_dlist_node*)&server);	
 	kn_dlist_node *node;
 	while((node = kn_dlist_pop(&server->base.dlist))){
@@ -164,9 +163,9 @@ int kn_stream_server_bind(kn_stream_server_t server,
 	if(ret == 0){
 		kn_dlist_push(&server->base.dlist,(kn_dlist_node*)conn);
 		conn->service = (struct service*)server;
-		//if(conn->recv_timeout || conn->send_timeout){
-		//	conn->_timer_item = kn_register_timer(server->timer,NULL,check_timeout,conn,1000);
-		//}
+		if(conn->recv_timeout || conn->send_timeout){
+			conn->timer = kn_reg_timer(server->timermgr,1000,check_timeout,conn);
+		}
 	}
 	return ret;
 }	
