@@ -7,8 +7,8 @@
 
 typedef struct kn_timer{
 	kn_dlist_node node;             //同一时间过期的timer被连接在一起
-	uint64_t      ms;
 	uint64_t      timeout;
+	uint64_t      expire;
 	void          *ud;
 	kn_cb_timer   timeout_callback;
 	kn_timermgr_t mgr;
@@ -67,8 +67,8 @@ static void timing_wheel_add(struct timing_wheel *wheel,kn_timer_t timer){
 	uint64_t now = kn_systemms64();
 	int64_t delta = 0;
 	do{
-		if(timer->timeout > now)
-			delta = (int64_t)(timer->timeout - now);
+		if(timer->expire > now)
+			delta = (int64_t)(timer->expire - now);
 		else 
 			break;
 
@@ -112,16 +112,16 @@ static inline void _reg_timer(kn_timer_t timer){
 		kn_dlist_push(&timer->mgr->pending_reg,(kn_dlist_node*)timer);	
 		return;
 	}
-	timer->timeout = timer->ms + kn_systemms64();
-	if(timer->ms <= timer->mgr->wheels[wheel_ms]->slotsize - timer->mgr->wheels[wheel_ms]->curslot)
+	timer->expire = timer->timeout + kn_systemms64();
+	if(timer->timeout <= timer->mgr->wheels[wheel_ms]->slotsize - timer->mgr->wheels[wheel_ms]->curslot)
 		timing_wheel_add(timer->mgr->wheels[wheel_ms],timer);
-	else if(timer->ms/T_SEC < timer->mgr->wheels[wheel_sec]->slotsize - timer->mgr->wheels[wheel_sec]->curslot)
+	else if(timer->timeout/T_SEC < timer->mgr->wheels[wheel_sec]->slotsize - timer->mgr->wheels[wheel_sec]->curslot)
 		timing_wheel_add(timer->mgr->wheels[wheel_sec],timer);
-	else if(timer->ms/T_MIN < timer->mgr->wheels[wheel_min]->slotsize - timer->mgr->wheels[wheel_min]->curslot)
+	else if(timer->timeout/T_MIN < timer->mgr->wheels[wheel_min]->slotsize - timer->mgr->wheels[wheel_min]->curslot)
 		timing_wheel_add(timer->mgr->wheels[wheel_min],timer);
-	else if(timer->ms/T_HOUR < timer->mgr->wheels[wheel_hour]->slotsize - timer->mgr->wheels[wheel_hour]->curslot)
+	else if(timer->timeout/T_HOUR < timer->mgr->wheels[wheel_hour]->slotsize - timer->mgr->wheels[wheel_hour]->curslot)
 		timing_wheel_add(timer->mgr->wheels[wheel_hour],timer);
-	else if(timer->ms/T_DAY < timer->mgr->wheels[wheel_day]->slotsize - timer->mgr->wheels[wheel_day]->curslot)
+	else if(timer->timeout/T_DAY < timer->mgr->wheels[wheel_day]->slotsize - timer->mgr->wheels[wheel_day]->curslot)
 		timing_wheel_add(timer->mgr->wheels[wheel_day],timer);
 	else
 		assert(0);
@@ -201,7 +201,7 @@ kn_timer_t    kn_reg_timer(kn_timermgr_t t,uint64_t timeout,kn_cb_timer cb,void 
 	timer->ud = ud;
 	timer->timeout_callback = cb;
 	timer->mgr = t;
-	timer->ms = timeout;
+	timer->timeout = timeout;
 	_reg_timer(timer);
 	return timer;
 }

@@ -10,7 +10,7 @@ kn_timermgr_t timermgr=NULL;
 
 int timer_callback(kn_timer_t timer){
 	struct userst *st = (struct userst*)kn_timer_getud(timer);
-	printf("%d,%d\n",kn_systemms64()-st->expecttime,st->ms);
+	printf("%lu,%lu\n",kn_systemms64()-st->expecttime,st->ms);
 	st->expecttime = kn_systemms64() + st->ms;
 	return 1;
 }
