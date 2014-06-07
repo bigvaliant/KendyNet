@@ -244,7 +244,6 @@ kn_epoll* kn_epoll_new()
 	ep->events = calloc(1,(sizeof(*ep->events)*ep->maxevents));
 	kn_dlist_init(&ep->base.actived[0]);
 	kn_dlist_init(&ep->base.actived[1]);
-	kn_dlist_init(&ep->base.service);
 	ep->base.actived_index = 0;
 	kn_dlist_init(&ep->base.connecting);
 	ep->base.Loop = kn_epoll_loop;

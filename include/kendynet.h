@@ -5,6 +5,7 @@
 #include "kn_sockaddr.h"
 #include "kn_ref.h"
 #include "kn_timer.h"
+#include "kn_time.h"
 
 typedef struct kn_proactor* kn_proactor_t;
 typedef struct kn_fd*       kn_fd_t;

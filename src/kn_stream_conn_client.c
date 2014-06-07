@@ -4,6 +4,7 @@
 
 typedef struct kn_stream_client{
 	kn_proactor_t proactor;
+	kn_dlist      dlist;
 	void (*on_connection)(kn_stream_client_t,kn_stream_conn_t,void *);
 	void (*on_connect_fail)(kn_stream_client_t,kn_sockaddr *addr,int err,void *);
 }kn_stream_client,*kn_stream_client_t;
@@ -35,14 +36,14 @@ kn_stream_client_t kn_new_stream_client(kn_proactor_t p,
 	client->on_connection = on_connect;
 	client->on_connect_fail = on_connect_fail;
 	client->proactor = p;
-	kn_dlist_init(&client->base.dlist);
+	kn_dlist_init(&client->dlist);
 	return client;
 }
 
 void kn_destroy_stream_client(kn_stream_client_t client){
 	kn_dlist_remove((kn_dlist_node*)&client);
 	kn_dlist_node *node;
-	while((node = kn_dlist_pop(&client->base.dlist))){
+	while((node = kn_dlist_pop(&client->dlist))){
 		kn_stream_conn_t conn = (kn_stream_conn_t)node;
 		if(conn->on_disconnected) conn->on_disconnected(conn,0);
 		kn_closefd(conn->fd);
@@ -79,7 +80,7 @@ int kn_stream_client_bind( kn_stream_client_t client,
 						on_recv_timeout,send_timeout,on_send_timeout);
 	
 	if(ret == 0){
-		kn_dlist_push(&client->base.dlist,(kn_dlist_node*)conn);
+		kn_dlist_push(&client->dlist,(kn_dlist_node*)conn);
 	}
 	return ret;
 }

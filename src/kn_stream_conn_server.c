@@ -9,6 +9,7 @@ typedef struct kn_stream_server{
 	kn_fd_t      listen_fd;
 	kn_sockaddr  server_addr;
 	kn_timermgr_t   timermgr;
+	kn_dlist      dlist;
 }kn_stream_server,*kn_stream_server_t;
 
 static void on_new_connection(kn_fd_t fd,void *ud){
@@ -81,6 +82,7 @@ kn_stream_server_t kn_new_stream_server(kn_proactor_t p,
 		server->server_addr = *serveraddr;
 	}
 	
+	kn_dlist_init(&server->dlist);
 	server->on_connection = on_connect;
 	server->timermgr = kn_new_timermgr();
 	server->proactor = p;
@@ -92,7 +94,7 @@ void kn_destroy_stream_server(kn_stream_server_t server){
 	kn_del_timermgr(server->timermgr);
 	kn_dlist_remove((kn_dlist_node*)&server);	
 	kn_dlist_node *node;
-	while((node = kn_dlist_pop(&server->base.dlist))){
+	while((node = kn_dlist_pop(&server->dlist))){
 		kn_stream_conn_t conn = (kn_stream_conn_t)node;
 		if(conn->on_disconnected) conn->on_disconnected(conn,0);
 		kn_closefd(conn->fd);
@@ -151,7 +153,7 @@ int kn_stream_server_bind(kn_stream_server_t server,
 						   on_packet,on_disconnected,recv_timeout,
 						   on_recv_timeout,send_timeout,on_send_timeout);
 	if(ret == 0){
-		kn_dlist_push(&server->base.dlist,(kn_dlist_node*)conn);
+		kn_dlist_push(&server->dlist,(kn_dlist_node*)conn);
 		if(conn->recv_timeout || conn->send_timeout){
 			conn->timer = kn_reg_timer(server->proactor,1000,check_timeout,conn);
 		}
