@@ -174,11 +174,9 @@ static int32_t _epoll_wait(int epfd, struct epoll_event *events,int maxevents, i
 
 static int8_t check_connect_timeout(kn_dlist_node *dln, void *ud)
 {
-	//printf("check_connect_timeout\n");
 	kn_connector_t c = (kn_connector_t)dln;
 	uint64_t l_now = *((uint64_t*)ud);
     if(l_now >= c->timeout){
-        //c->base.proactor->UnRegister(c->base.proactor,(kn_fd_t)c);
         c->cb_connected(NULL,&c->remote,c->base.ud,ETIMEDOUT);
         kn_closefd((kn_fd_t)c);
         return 1;
@@ -198,6 +196,7 @@ int32_t kn_epoll_loop(kn_proactor_t p,int32_t ms)
 	kn_fd_t     s;
 	kn_epoll*   ep = (kn_epoll*)p;
 	if(ms < 0) ms = 0;
+	kn_timermgr_tick(p->timermgr);
 	do{
 		if(!kn_dlist_empty(&p->connecting)){
 			l_now = kn_systemms64();
@@ -228,22 +227,13 @@ int32_t kn_epoll_loop(kn_proactor_t p,int32_t ms)
 		}
 		current_tick = kn_systemms64();
 	}while(timeout > current_tick);
-	
-	if(!kn_dlist_empty(&p->service)){
-		struct service *cur = (struct service*)kn_dlist_first(&p->service);
-		struct service *last = (struct service*)kn_dlist_last(&p->service);
-		do{
-			if(cur->tick) cur->tick(cur);
-			if(cur == last) break;
-			cur = (struct service*)((kn_dlist_node*)cur)->next;
-		}while(1); 
-	}	
+	kn_timermgr_tick(p->timermgr);
 	return 0;
 }
 
 
 void *testaddr;
-
+kn_timer_t kn_proactor_reg_timer(kn_proactor_t p,uint64_t timeout,kn_cb_timer cb,void *ud);
 kn_epoll* kn_epoll_new()
 {
 	int epfd = epoll_create(kn_max_proactor_fd);
@@ -263,12 +253,15 @@ kn_epoll* kn_epoll_new()
 	ep->base.addRead = addRead;
 	ep->base.delRead = delRead;
 	ep->base.addWrite = addWrite;
-	ep->base.delWrite = delWrite;	
+	ep->base.delWrite = delWrite;
+	ep->base.reg_timer = kn_proactor_reg_timer;
+	ep->base.timermgr = kn_new_timermgr();
 	testaddr = (void*)ep;
 	return ep;
 }
 
 void kn_epoll_del(kn_epoll *ep)
 {
-	
+	kn_del_timermgr(ep->base.timermgr);
+	free(ep);
 }

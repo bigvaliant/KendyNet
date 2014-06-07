@@ -404,3 +404,7 @@ int kn_fd_get_type(kn_fd_t s)
 	assert(s);	
 	return s->type;
 }
+
+kn_timer_t kn_reg_timer(kn_proactor_t p,uint64_t timeout,kn_cb_timer cb,void *ud){
+	return p->reg_timer(p,timeout,cb,ud);
+}

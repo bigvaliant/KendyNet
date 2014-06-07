@@ -23,15 +23,6 @@
 typedef struct kn_timermgr *kn_timermgr_t;
 typedef struct kn_timer *kn_timer_t;
 
-kn_timermgr_t kn_new_timermgr();
-void          kn_del_timermgr(kn_timermgr_t);
-void          kn_timermgr_tick(kn_timermgr_t);
-
-
 typedef int  (*kn_cb_timer)(kn_timer_t);//如果返回1继续注册，否则不再注册
-kn_timer_t    kn_reg_timer(kn_timermgr_t,uint64_t timeout,kn_cb_timer cb,void *ud);
-void          kn_del_timer(kn_timer_t);//销毁timer并从timermgr中取消注册
-void*         kn_timer_getud(kn_timer_t);
-
 
 #endif

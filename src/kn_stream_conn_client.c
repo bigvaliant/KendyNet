@@ -3,11 +3,9 @@
 #include "kn_proactor.h"
 
 typedef struct kn_stream_client{
-	struct service base;
 	kn_proactor_t proactor;
 	void (*on_connection)(kn_stream_client_t,kn_stream_conn_t,void *);
 	void (*on_connect_fail)(kn_stream_client_t,kn_sockaddr *addr,int err,void *);
-	//kn_timer_t   timer;
 }kn_stream_client,*kn_stream_client_t;
 
 struct connect_context{
@@ -28,7 +26,6 @@ static void connect_cb(kn_fd_t fd,struct kn_sockaddr* addr,void *ud,int err)
 	free(c);
 }
 
-void kn_stream_client_tick(struct service *s);
 kn_stream_client_t kn_new_stream_client(kn_proactor_t p,
 										void (*on_connect)(kn_stream_client_t,kn_stream_conn_t,void *ud),
 										void (*on_connect_fail)(kn_stream_client_t,kn_sockaddr*,int err,void *ud))
@@ -37,17 +34,12 @@ kn_stream_client_t kn_new_stream_client(kn_proactor_t p,
 
 	client->on_connection = on_connect;
 	client->on_connect_fail = on_connect_fail;
-	//client->timer = kn_new_timer();
 	client->proactor = p;
-	//client->base.tick = NULL;
 	kn_dlist_init(&client->base.dlist);
-	if(client->base.tick)
-		kn_dlist_push(&p->service,(kn_dlist_node*)client);
 	return client;
 }
 
 void kn_destroy_stream_client(kn_stream_client_t client){
-	//kn_delete_timer(client->timer);
 	kn_dlist_remove((kn_dlist_node*)&client);
 	kn_dlist_node *node;
 	while((node = kn_dlist_pop(&client->base.dlist))){
@@ -88,7 +80,6 @@ int kn_stream_client_bind( kn_stream_client_t client,
 	
 	if(ret == 0){
 		kn_dlist_push(&client->base.dlist,(kn_dlist_node*)conn);
-		conn->service = (struct service*)client;
 	}
 	return ret;
 }

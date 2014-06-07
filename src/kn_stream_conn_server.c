@@ -4,7 +4,6 @@
 #include "kn_time.h"
 
 typedef struct kn_stream_server{
-	struct service base;
 	kn_proactor_t proactor;
 	void (*on_connection)(struct kn_stream_server*,kn_stream_conn_t);
 	kn_fd_t      listen_fd;
@@ -65,11 +64,6 @@ static int check_timeout(kn_timer_t timer)
 	return ret;
 }
 
-void kn_stream_server_tick(struct service *s){
-	//检查连接超时
-	kn_timermgr_tick(((kn_stream_server_t)s)->timermgr);
-}
-
 
 kn_stream_server_t kn_new_stream_server(kn_proactor_t p,
 		kn_sockaddr *serveraddr,
@@ -90,10 +84,6 @@ kn_stream_server_t kn_new_stream_server(kn_proactor_t p,
 	server->on_connection = on_connect;
 	server->timermgr = kn_new_timermgr();
 	server->proactor = p;
-	server->base.tick = kn_stream_server_tick;
-	kn_dlist_init(&server->base.dlist);
-	if(server->base.tick)
-		kn_dlist_push(&p->service,(kn_dlist_node*)server);
 	return server;
 }
 
@@ -162,9 +152,8 @@ int kn_stream_server_bind(kn_stream_server_t server,
 						   on_recv_timeout,send_timeout,on_send_timeout);
 	if(ret == 0){
 		kn_dlist_push(&server->base.dlist,(kn_dlist_node*)conn);
-		conn->service = (struct service*)server;
 		if(conn->recv_timeout || conn->send_timeout){
-			conn->timer = kn_reg_timer(server->timermgr,1000,check_timeout,conn);
+			conn->timer = kn_reg_timer(server->proactor,1000,check_timeout,conn);
 		}
 	}
 	return ret;

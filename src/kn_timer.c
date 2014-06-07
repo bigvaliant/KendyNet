@@ -195,7 +195,7 @@ void kn_timermgr_tick(kn_timermgr_t t){
 
 static uint64_t MAX_TIMEOUT = (uint64_t)(60*24*3600*1000);
 
-kn_timer_t    kn_reg_timer(kn_timermgr_t t,uint64_t timeout,kn_cb_timer cb,void *ud){
+kn_timer_t _kn_reg_timer(kn_timermgr_t t,uint64_t timeout,kn_cb_timer cb,void *ud){
 	if(timeout == 0 || timeout > MAX_TIMEOUT) return NULL;
 	kn_timer_t timer = calloc(1,sizeof(*timer));
 	timer->ud = ud;
