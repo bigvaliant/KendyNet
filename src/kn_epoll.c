@@ -180,7 +180,6 @@ int32_t kn_epoll_loop(kn_proactor_t p,int32_t ms)
 	kn_fd_t     s;
 	kn_epoll*   ep = (kn_epoll*)p;
 	if(ms < 0) ms = 0;
-	kn_timermgr_tick(p->timermgr);
 	do{
 		actived = kn_proactor_activelist(p);	
         if(!kn_dlist_empty(actived)){
@@ -188,12 +187,14 @@ int32_t kn_epoll_loop(kn_proactor_t p,int32_t ms)
             while((s = (kn_fd_t)kn_dlist_pop(actived)) != NULL){
                 if(s->process(s))
                     kn_procator_putin_active(p,s);
+				kn_timermgr_tick(p->timermgr);	
             }
         }
        	current_tick = kn_systemms64();
+		kn_timermgr_tick(p->timermgr);
        	actived = kn_proactor_activelist(p);
         if(kn_dlist_empty(actived))
-			sleep_ms = timeout > current_tick ? timeout - current_tick:0;
+			sleep_ms = timeout > current_tick ? 1:0;
 		else
 			sleep_ms = 0;
         nfds = _epoll_wait(ep->epfd,ep->events,ep->eventsize,(uint32_t)sleep_ms);
