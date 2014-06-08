@@ -116,7 +116,7 @@ void _write_log(logfile_t logfile,const char *content)
 	struct log_item *item = calloc(1,sizeof(*item) + content_len);
 	item->_logfile = logfile;
 	strncpy(item->content,content,content_len);
-	int8_t ret = kn_channel_putmsg(pending_log,NULL,item);
+	int8_t ret = kn_channel_putmsg(pending_log,NULL,item,NULL);
 	if(ret != 0) free(item);
 }
 			           
