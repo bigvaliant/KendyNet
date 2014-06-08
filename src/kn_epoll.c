@@ -168,17 +168,6 @@ static int32_t _epoll_wait(int epfd, struct epoll_event *events,int maxevents, i
 	return 0;
 }
 
-static int8_t check_connect_timeout(kn_dlist_node *dln, void *ud)
-{
-	kn_connector_t c = (kn_connector_t)dln;
-	uint64_t l_now = *((uint64_t*)ud);
-    if(l_now >= c->timeout){
-        c->cb_connected(NULL,&c->remote,c->base.ud,ETIMEDOUT);
-        kn_closefd((kn_fd_t)c);
-        return 1;
-    }
-    return 0;
-}
 
 int32_t kn_epoll_loop(kn_proactor_t p,int32_t ms)
 {
@@ -187,7 +176,6 @@ int32_t kn_epoll_loop(kn_proactor_t p,int32_t ms)
 	uint64_t    current_tick;
 	int32_t     nfds;
 	int32_t     i;
-	uint64_t    l_now;
 	kn_dlist*   actived;
 	kn_fd_t     s;
 	kn_epoll*   ep = (kn_epoll*)p;

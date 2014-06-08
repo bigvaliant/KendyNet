@@ -96,5 +96,5 @@ int kn_stream_connect(kn_stream_client_t client,
 	c->client = client;
 	c->ud = ud;
 	return kn_asyn_connect(client->proactor,SOCK_STREAM,addr_local,addr_remote,
-						   connect_cb,(void*)c,timeout);	
+						   connect_cb,(void*)c);	
 }	
