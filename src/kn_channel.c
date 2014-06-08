@@ -7,6 +7,7 @@
 struct msg{
 	kn_list_node node;
 	kn_channel_t sender;
+	void (*fn_destroy)(void*);
 	void *data;	
 };
 
@@ -14,7 +15,10 @@ static void channel_destroy(void *ptr){
 	kn_channel* c = (kn_channel*)ptr;
 	struct msg* msg;
 	while((msg = (struct msg*)kn_list_pop(&c->queue)) != NULL){
-		free(msg->data);
+		if(msg->fn_destroy)
+			msg->fn_destroy(msg->data);
+		else	
+			free(msg->data);
 		free(msg); 
 	}	
 	LOCK_DESTROY(c->lock);
@@ -65,7 +69,7 @@ static void kn_channel_on_active(kn_fd_t s,int event){
 	}
 }
 
-int kn_channel_putmsg(kn_channel_t _to,kn_channel_t* _from,void *data)
+int kn_channel_putmsg(kn_channel_t _to,kn_channel_t* _from,void *data,void (*fn_destroy)(void*))
 {
 	kn_channel *to = (kn_channel*)cast2ref(_to);
 	kn_channel *from = _from?(kn_channel*)cast2ref(*_from):NULL;
@@ -75,6 +79,7 @@ int kn_channel_putmsg(kn_channel_t _to,kn_channel_t* _from,void *data)
 	struct msg *msg = calloc(1,sizeof(*msg));
 	if(from) msg->sender = *_from;
 	msg->data = data;
+	msg->fn_destroy = fn_destroy;
 	LOCK(to->lock);
 	kn_list_pushback(&to->queue,&msg->node);
 	while(1){
@@ -121,8 +126,10 @@ static int8_t kn_channel_process(kn_fd_t s){
 	int n = 65536;//关键参数
 	while((msg = kn_channel_getmsg(c)) != NULL && n > 0){
 		c->cb_msg(c->channel->ident,msg->sender,msg->data,c->ud);
-		free(msg->data);
-		free(msg);
+		if(msg->fn_destroy)
+			msg->fn_destroy(msg->data);
+		else	
+			free(msg->data);
 		--n;
 	}
 	if(n <= 0) 

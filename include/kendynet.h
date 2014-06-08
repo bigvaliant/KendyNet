@@ -106,7 +106,7 @@ int          kn_channel_bind(struct kn_proactor*,kn_channel_t,
 /*
 *  from:如果不为空,表示如果要对这条消息作响应响应消息发往from. 
 */ 
-int  kn_channel_putmsg(kn_channel_t to,kn_channel_t *from,void*);
+int  kn_channel_putmsg(kn_channel_t to,kn_channel_t *from,void*,void (*fn_destroy)(void*));
 
 typedef struct redisconn *redisconn_t;
 

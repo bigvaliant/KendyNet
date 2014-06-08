@@ -346,3 +346,22 @@ void *kn_stream_conn_getud(kn_stream_conn_t conn)
 {
 	return conn->ud;
 }
+
+ident   kn_stream_conn_makeident(kn_stream_conn_t c){
+	return make_ident(&c->fd->ref);	
+}
+
+kn_stream_conn_t cast2_kn_stream_conn(ident _ident){
+	kn_stream_conn_t conn = NULL;
+    if(!_ident.ptr) return NULL;
+    TRY{   
+		if(_ident.identity == _ident.ptr->identity)
+		{
+			kn_fd_t fd = (kn_fd_t)((char*)_ident.ptr - sizeof(kn_dlist_node));
+			conn = (kn_stream_conn_t)kn_fd_getud(fd);
+		}
+    }CATCH_ALL
+    {  
+    }ENDTRY;
+    return conn; 
+}

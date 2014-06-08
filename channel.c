@@ -11,12 +11,12 @@ kn_channel_t channel2;
 int count = 0;
 void  on_msg1(kn_channel_t c, kn_channel_t sender,void *msg,void *ud){
 	++count;
-	kn_channel_putmsg(channel2,NULL,malloc(1));
+	kn_channel_putmsg(channel2,NULL,malloc(1),NULL);
 }
 
 void  on_msg2(kn_channel_t c, kn_channel_t sender,void *msg,void *ud){
 	//printf("recv msg\n");
-	kn_channel_putmsg(channel1,NULL,malloc(1));
+	kn_channel_putmsg(channel1,NULL,malloc(1),NULL);
 }
 
 void *routine1(void *arg)
