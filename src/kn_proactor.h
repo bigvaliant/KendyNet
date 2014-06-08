@@ -27,7 +27,6 @@ typedef struct kn_proactor
     
     kn_dlist actived[2];
     int8_t   actived_index;
-    kn_dlist connecting;
 	kn_timermgr_t timermgr;
 }kn_proactor,*kn_proactor_t;
 

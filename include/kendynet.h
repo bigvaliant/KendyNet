@@ -27,8 +27,7 @@ int kn_asyn_connect(struct kn_proactor*,
 			   struct kn_sockaddr *addr_local,				  
 			   struct kn_sockaddr *addr_remote,
 			   void (*)(kn_fd_t,struct kn_sockaddr*,void*,int),
-			   void *ud,
-			   uint64_t timeout);
+			   void *ud);
 
 
 kn_fd_t kn_listen(struct kn_proactor*,

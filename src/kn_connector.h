@@ -7,7 +7,6 @@ struct kn_proactor;
 
 typedef struct kn_connector{
 	struct kn_fd   base;
-	uint64_t           timeout;
 	struct kn_sockaddr remote;
 	/*
 	 * 连接失败或成功回调
@@ -20,8 +19,7 @@ typedef struct kn_connector{
 kn_connector_t kn_new_connector(int fd,
 								struct kn_sockaddr*,
 								void (*)(kn_fd_t,struct kn_sockaddr*,void*,int),
-								void *ud,
-								uint64_t timeout);
+								void *ud);
 
 
 

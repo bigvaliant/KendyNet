@@ -45,10 +45,6 @@ int32_t  kn_epoll_register(kn_proactor_t p,kn_fd_t s){
 		ep->maxevents <<= 2;
 		ep->events = calloc(1,sizeof(*ep->events)*ep->maxevents);
 	}
-
-	if(type == CONNECTOR){
-		kn_dlist_push(&p->connecting,(kn_dlist_node*)s);
-	}
 	s->proactor = p;
 	return 0;
 }
@@ -198,10 +194,6 @@ int32_t kn_epoll_loop(kn_proactor_t p,int32_t ms)
 	if(ms < 0) ms = 0;
 	kn_timermgr_tick(p->timermgr);
 	do{
-		if(!kn_dlist_empty(&p->connecting)){
-			l_now = kn_systemms64();
-            kn_dlist_check_remove(&p->connecting,check_connect_timeout,(void*)&l_now);
-		}
 		actived = kn_proactor_activelist(p);	
         if(!kn_dlist_empty(actived)){
             p->actived_index = (p->actived_index+1)%2;
@@ -245,7 +237,6 @@ kn_epoll* kn_epoll_new()
 	kn_dlist_init(&ep->base.actived[0]);
 	kn_dlist_init(&ep->base.actived[1]);
 	ep->base.actived_index = 0;
-	kn_dlist_init(&ep->base.connecting);
 	ep->base.Loop = kn_epoll_loop;
 	ep->base.Register = kn_epoll_register;
 	ep->base.UnRegister = kn_epoll_unregister;

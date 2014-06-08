@@ -49,8 +49,7 @@ static void kn_connector_on_active(struct kn_fd *s,int event){
 kn_connector_t kn_new_connector(int fd,
 								struct kn_sockaddr *remote,
 								void (*cb_connect)(kn_fd_t,struct kn_sockaddr*,void*,int),
-								void *ud,
-								uint64_t timeout)
+								void *ud)
 {
 	kn_connector_t c = calloc(1,sizeof(*c));
 	c->base.fd = fd;
@@ -59,7 +58,6 @@ kn_connector_t kn_new_connector(int fd,
 	c->base.on_active = kn_connector_on_active;
 	c->base.ud = ud;
 	c->remote = *remote;
-	c->timeout = timeout;
 	c->cb_connected = cb_connect;
 	return c;
 }

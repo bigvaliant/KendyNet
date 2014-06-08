@@ -191,8 +191,7 @@ int kn_asyn_connect(kn_proactor_t p,
 			   struct kn_sockaddr *addr_local,
 			   struct kn_sockaddr *addr_remote,
 			   void (*cb_connect)(kn_fd_t,struct kn_sockaddr*,void*,int),
-			   void *ud,
-			   uint64_t timeout)
+			   void *ud)
 {
 	assert(p);
 	assert(addr_remote);
@@ -256,7 +255,7 @@ int kn_asyn_connect(kn_proactor_t p,
 		cb_connect(kn_new_datasocket(fd,STREAM_SOCKET,addr_local,addr_remote),addr_remote,ud,0);
 		return 0;
 	}else{
-		c = kn_new_connector(fd,addr_remote,cb_connect,ud,kn_systemms64()+timeout);
+		c = kn_new_connector(fd,addr_remote,cb_connect,ud);
         if(p->Register(p,(kn_fd_t)c) == 0){
             return 0;
 		}
