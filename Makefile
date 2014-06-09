@@ -90,5 +90,5 @@ testtimer:kendynet.a testtimer.c
 	$(CC) $(CFLAGS) -o testtimer testtimer.c kendynet.a $(INCLUDE) $(LDFLAGS)	$(DEFINE) -rdynamic -ldl	
 
 	
-	
-	
+testlua:kendynet.a testlua.c	
+	$(CC) $(CFLAGS) -o testlua testlua.c kendynet.a  $(INCLUDE) $(LDFLAGS) -llua -ldl -lm $(DEFINE) 	
