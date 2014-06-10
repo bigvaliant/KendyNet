@@ -86,10 +86,9 @@ int kn_stream_client_bind( kn_stream_client_t client,
 }
 
 int kn_stream_connect(kn_stream_client_t client,
-					  struct kn_sockaddr *addr_local,				  
-			          struct kn_sockaddr *addr_remote,
-					  void   *ud,
-			          uint64_t timeout)
+		struct kn_sockaddr *addr_local,				  
+		struct kn_sockaddr *addr_remote,
+		void   *ud)
 {
 
 	struct connect_context *c = calloc(1,sizeof(*c));

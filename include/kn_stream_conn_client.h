@@ -30,7 +30,6 @@ int  kn_stream_client_bind(kn_stream_client_t,
 int kn_stream_connect(kn_stream_client_t,
 					  struct kn_sockaddr *addr_local,				  
 			          struct kn_sockaddr *addr_remote,
-			          void   *ud,
-					  uint64_t timeout);				   
+			          void   *ud);				   
 
 #endif
