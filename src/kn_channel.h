@@ -14,13 +14,13 @@ struct kn_proactor;
 typedef ident kn_channel_t;
 
 typedef struct kn_channel{
-	kn_ref        ref;
-	pthread_key_t t_key;
-	LOCK_TYPE     lock;
-	kn_list       queue;
-	kn_dlist      waits;
-	pthread_t     owner;
-	ident         ident;	
+	kn_ref         ref;
+	pthread_key_t  t_key;
+	LOCK_TYPE      lock;
+	kn_list        queue;
+	kn_dlist       waits;
+	pthread_t      owner;
+	ident          ident;	
 }kn_channel;
 
 struct channel_pth{

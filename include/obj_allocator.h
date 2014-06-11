@@ -25,6 +25,6 @@
 struct obj_allocator;
 typedef struct obj_allocator *obj_allocator_t;
 
-kn_allocator_t new_obj_allocator(uint32_t objsize,uint32_t initsize);
+kn_allocator_t new_obj_allocator(uint32_t objsize);
 
 #endif
