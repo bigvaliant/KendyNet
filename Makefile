@@ -33,6 +33,7 @@ kendynet.a: \
 		   src/redisconn.c\
 		   src/tls.c\
 		   src/lua_util.c\
+		   src/lookup8.c\
 		   src/kn_channel.c
 		$(CC) $(CFLAGS) -c $^ $(INCLUDE) $(DEFINE)
 		ar -rc kendynet.a *.o

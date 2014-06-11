@@ -2,6 +2,8 @@
 #include "kn_common_define.h"
 #include "lockfree.h"
 #include <pthread.h>
+#include "hash_map.c"
+#include "common_hash_function.h"
 
 struct obj_block
 {
@@ -23,10 +25,11 @@ struct obj_slot
 struct pth_allocator
 {
 	lockfree_stack que;
-	uint32_t free_block_size;
-	kn_dlist free_blocks;
-	kn_dlist recy_blocks;
-	uint32_t free_memsize;
+	uint32_t   free_block_size;
+	kn_dlist   free_blocks;
+	kn_dlist   recy_blocks;
+	uint32_t   free_memsize;
+	hash_map_t recy;
 };
 
 
@@ -38,11 +41,26 @@ struct obj_allocator{
 	pthread_key_t pkey;
 };
 
+struct recvlist{
+	kn_list_node      node;
+	kn_list           list;
+};
+
+static uint64_t _hash_func(void *key){
+	pthread_t k = *(pthread_t*)key;
+	return burtle_hash((uint8_t*)&k,sizeof(k),1);
+}
+
+static int32_t  _hash_key_eq(void *key1,void *key2){
+	return (*(pthread_t*)key1) == (*(pthread_t*)key2) ? 0:-1;	
+}
+
 static struct pth_allocator* new_pth(obj_allocator_t allo)
 {
 	struct pth_allocator *pth = calloc(1,sizeof(*pth));
 	kn_dlist_init(&pth->recy_blocks);
 	kn_dlist_init(&pth->free_blocks);
+	pth->recy = hash_map_create(64,sizeof(void*),sizeof(void*),_hash_func,_hash_key_eq);
 	return pth;
 }
 
@@ -51,12 +69,17 @@ static inline void __dealloc(obj_allocator_t _allo,struct pth_allocator *pth,str
 		kn_list_pushback(&obj->block->freelist,(kn_list_node*)obj);
 		uint32_t lsize = kn_list_size(&obj->block->freelist);
 		pth->free_memsize += _allo->objsize;
-		if(unlikely(lsize == 1)){
-				kn_dlist_remove((kn_dlist_node*)obj->block);//remove from _alloc->recy_blocks
-				kn_dlist_push(&pth->free_blocks,(kn_dlist_node*)obj->block);	
-				pth->free_block_size++;
+		
+		if(likely(lsize > 1 && lsize < _allo->alloc_size)) return;
+		
+		if(lsize == 1){
+			kn_dlist_remove((kn_dlist_node*)obj->block);//remove from _alloc->recy_blocks
+			kn_dlist_push(&pth->free_blocks,(kn_dlist_node*)obj->block);	
+			pth->free_block_size++;
+			return;
 		}
-		else if(unlikely(lsize == _allo->alloc_size && pth->free_memsize > _allo->reserve_size))
+		
+		if(lsize == _allo->alloc_size && pth->free_memsize > _allo->reserve_size)
 		{
 			pth->free_memsize -= _allo->alloc_size*_allo->objsize;
 			kn_dlist_remove((kn_dlist_node*)obj->block);//remove from _alloc->free_blocks
@@ -64,7 +87,6 @@ static inline void __dealloc(obj_allocator_t _allo,struct pth_allocator *pth,str
 			free(obj->block);
 		}
 }
-
 
 static inline void* __alloc(obj_allocator_t _allo,struct pth_allocator *pth)
 {
@@ -81,11 +103,15 @@ static inline void* __alloc(obj_allocator_t _allo,struct pth_allocator *pth)
 	return (void*)obj->buf;
 }
 
+
+static __thread pthread_t threadid = 0;
+
 static inline void __expand(obj_allocator_t _allo,struct pth_allocator *pth)
 {
 	struct obj_block *b = calloc(1,sizeof(*b)+_allo->alloc_size*_allo->objsize);
 	b->que = &pth->que;
-	b->thdid = pthread_self();
+	if(unlikely(!threadid)) threadid = pthread_self();
+	b->thdid = threadid;
 	kn_list_init(&b->freelist);
 	uint32_t i = 0;
 	for(; i < _allo->alloc_size;++i)
@@ -99,47 +125,67 @@ static inline void __expand(obj_allocator_t _allo,struct pth_allocator *pth)
 	++pth->free_block_size;
 }
 
-void* obj_alloc(struct kn_allocator *allo,int32_t size)
+void* obj_alloc(struct kn_allocator *allo,int32_t _)
 {
+	(void)_;
 	obj_allocator_t _allo = (obj_allocator_t)allo;
 	struct pth_allocator *pth = (struct pth_allocator*)pthread_getspecific(_allo->pkey);
 	if(unlikely(!pth))
 	{
 		pth = new_pth(_allo);
 		pthread_setspecific(_allo->pkey,pth);
-		
 	}
 	if(unlikely(kn_dlist_empty(&pth->free_blocks)))
 	{
-		kn_list_node *n;
-		while((n = lfstack_pop(&pth->que)) != NULL){
-			__dealloc(_allo,pth,(struct obj_slot*)n);
-		}
-				
-	}else
-		return __alloc(_allo,pth);
-
-	if(unlikely(kn_dlist_empty(&pth->free_blocks)))
-		__expand(_allo,pth);
+		struct recvlist *l = (struct recvlist*)lfstack_pop(&pth->que);
+		if(l){
+			do{
+				struct obj_slot *obj;
+				while((obj = (struct obj_slot*)kn_list_pop(&l->list)) != NULL){
+					__dealloc(_allo,pth,obj);
+				}
+				free(l);
+				l = (struct recvlist*)lfstack_pop(&pth->que);
+			}while(l);
+		}else
+			__expand(_allo,pth);			
+	}
 	return __alloc(_allo,pth);
 }
-
-
 
 void obj_dealloc(struct kn_allocator *allo ,void *ptr)
 {
 	obj_allocator_t _allo = (obj_allocator_t)allo;
-	struct obj_slot *obj = (struct obj_slot*)((char*)ptr - sizeof(struct obj_slot));	
-	if(obj->block->thdid == pthread_self()){
-
+	struct obj_slot *obj = (struct obj_slot*)((char*)ptr - sizeof(struct obj_slot));
+	if(unlikely(!threadid)) threadid = pthread_self();	
+	if(obj->block->thdid == threadid){
 		struct pth_allocator *pth = (struct pth_allocator*)pthread_getspecific(_allo->pkey);;
 		if(unlikely(!pth))
 			abort();
 		__dealloc(_allo,pth,obj);
 	}
-	else
-	{
-		lfstack_push(obj->block->que,(kn_list_node*)obj);
+	else{
+		struct pth_allocator *pth = (struct pth_allocator*)pthread_getspecific(_allo->pkey);
+		if(unlikely(!pth))
+		{
+			pth = new_pth(_allo);
+			pthread_setspecific(_allo->pkey,pth);
+		}
+		hash_map_iter it = hash_map_find(pth->recy,(void*)&obj->block->thdid); 
+		hash_map_iter end = hash_map_end(pth->recy);
+		struct recvlist *l;
+		if(IT_EQ(it,end)){
+			l = calloc(1,sizeof(*l));
+			kn_list_init(&l->list);
+			hash_map_insert(pth->recy,(void*)&obj->block->thdid,(void*)&l);
+		}else{
+			l = (struct recvlist*)IT_GET_VAL(void*,it);
+		}
+		kn_list_pushback(&l->list,(kn_list_node*)obj);
+		if(kn_list_size(&l->list) > 4096){
+			hash_map_erase(pth->recy,it);
+			lfstack_push(obj->block->que,(kn_list_node*)l);
+		}
 	}
 }
 	
