@@ -327,7 +327,7 @@ struct rbnode* rbtree_remove(rbtree_t rb,void *key)
 }
 
 
-
+/*
 int32_t check(rbtree_t rb,struct rbnode *n,int32_t level,int32_t black_level,int32_t *max_black_level,int32_t *max_level)
 {
 	if(n == rb->nil)
@@ -378,4 +378,4 @@ void rbtree_check_vaild(rbtree_t rb)
 		if(check(rb,rb->root,0,0,&max_black_level,&max_level))
 			printf("max_black_level:%d,max_level:%d\n",max_black_level,max_level);
 	}
-}
+}*/
