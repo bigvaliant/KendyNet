@@ -14,7 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */	
-
+/*
+暂时废弃
 #ifndef _OBJ_ALLOCATOR_H
 #define _OBJ_ALLOCATOR_H
 
@@ -28,3 +29,4 @@ typedef struct obj_allocator *obj_allocator_t;
 kn_allocator_t new_obj_allocator(uint32_t objsize);
 
 #endif
+*/ 

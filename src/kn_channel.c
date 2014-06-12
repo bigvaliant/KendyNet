@@ -3,7 +3,7 @@
 
 //#define USE_MUTEX
 #include "kn_channel.h"
-#include "obj_allocator.h"
+//#include "obj_allocator.h"
 
 struct msg{
 	kn_list_node node;
@@ -12,8 +12,8 @@ struct msg{
 	void *data;	
 };
 
-static kn_allocator_t g_msgallocator = NULL;
-static pthread_once_t g_msgallocator_key_once = PTHREAD_ONCE_INIT;
+static int dummy;
+static pthread_once_t g_dummy_key_once = PTHREAD_ONCE_INIT;
 
 static void channel_destroy(void *ptr){
 	kn_channel* c = (kn_channel*)ptr;
@@ -23,9 +23,7 @@ static void channel_destroy(void *ptr){
 			msg->fn_destroy(msg->data);
 		else	
 			free(msg->data);
-		
-		FREE(g_msgallocator,msg);
-		//free(msg); 
+		free(msg); 
 	}	
 	LOCK_DESTROY(c->lock);
 	pthread_key_delete(c->t_key);
@@ -47,7 +45,7 @@ void kn_channel_close(kn_channel_t channel){
 }
 
 static void once_routine(){
-	g_msgallocator = new_obj_allocator(sizeof(struct msg));
+	dummy = 0;//这个注释掉吞吐量降低20%,why?
 }
 
 kn_channel_t kn_new_channel(pthread_t owner){
@@ -58,7 +56,7 @@ kn_channel_t kn_new_channel(pthread_t owner){
 	kn_ref_init(&c->ref,channel_destroy);
 	c->owner = owner;
 	c->ident = make_ident((kn_ref*)c);
-	pthread_once(&g_msgallocator_key_once,once_routine);
+	pthread_once(&g_dummy_key_once,once_routine);
 	return c->ident;
 }
 
@@ -87,8 +85,7 @@ int kn_channel_putmsg(kn_channel_t _to,kn_channel_t* _from,void *data,void (*fn_
 	if(!to || (_from && !from)) return -1;
 	kn_dlist_node *tmp = NULL;
 	int ret = 0;
-	struct msg *msg = ALLOC(g_msgallocator,1);
-	//struct msg *msg  = calloc(1,sizeof(*msg));
+	struct msg *msg  = calloc(1,sizeof(*msg));
 	if(from) msg->sender = *_from;
 	msg->data = data;
 	msg->fn_destroy = fn_destroy;
@@ -142,8 +139,7 @@ static int8_t kn_channel_process(kn_fd_t s){
 			msg->fn_destroy(msg->data);
 		else	
 			free(msg->data);
-		//free(msg);
-		FREE(g_msgallocator,msg);	
+		free(msg);
 		--n;
 	}
 	if(n <= 0) 
@@ -162,8 +158,7 @@ static void channel_pth_destroy(void *ptr){
 			msg->fn_destroy(msg->data);
 		else 
 			free(msg->data);
-		FREE(g_msgallocator,msg);
-		//free(msg); 
+		free(msg); 
 	}
 	if(pth->base.proactor)
 		pth->base.proactor->UnRegister(pth->base.proactor,&pth->base);	
