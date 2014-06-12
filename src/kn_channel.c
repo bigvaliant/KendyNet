@@ -179,7 +179,7 @@ int kn_channel_bind(struct kn_proactor *p,kn_channel_t _c,
 		return -1;
 	}
 	pth = calloc(1,sizeof(*pth));
-		
+
 	pth->base.type = CHANNEL;
 	int tmp[2];
 	if(pipe(tmp) != 0){

@@ -114,7 +114,7 @@ int kn_redisAsynConnect(kn_proactor_t p,
 						const char *ip,unsigned short port,
 						void (*cb_connect)(redisconn_t,int err,void *ud),
 						void (*cb_disconnected)(struct redisconn*,void *ud),
-						void *ud;
+						void *ud
 						);
 
 struct redisReply;						
