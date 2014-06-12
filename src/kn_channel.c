@@ -3,7 +3,6 @@
 
 //#define USE_MUTEX
 #include "kn_channel.h"
-//#include "obj_allocator.h"
 
 struct msg{
 	kn_list_node node;
@@ -12,8 +11,6 @@ struct msg{
 	void *data;	
 };
 
-static int dummy;
-static pthread_once_t g_dummy_key_once = PTHREAD_ONCE_INIT;
 
 static void channel_destroy(void *ptr){
 	kn_channel* c = (kn_channel*)ptr;
@@ -44,10 +41,6 @@ void kn_channel_close(kn_channel_t channel){
 	}
 }
 
-static void once_routine(){
-	dummy = 0;//这个注释掉吞吐量降低20%,why?
-}
-
 kn_channel_t kn_new_channel(pthread_t owner){
 	kn_channel *c = calloc(1,sizeof(*c));
 	c->lock = LOCK_CREATE();
@@ -56,7 +49,6 @@ kn_channel_t kn_new_channel(pthread_t owner){
 	kn_ref_init(&c->ref,channel_destroy);
 	c->owner = owner;
 	c->ident = make_ident((kn_ref*)c);
-	pthread_once(&g_dummy_key_once,once_routine);
 	return c->ident;
 }
 

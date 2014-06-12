@@ -1,5 +1,5 @@
 CFLAGS = -g -Wall -fno-strict-aliasing -std=gnu99
-LDFLAGS = -lpthread -lrt -lm -ltcmalloc
+LDFLAGS = -lpthread -lrt -lm -ljemalloc
 SHARED = -fPIC --shared
 CC = gcc
 INCLUDE =  -I./include -I./
