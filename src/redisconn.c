@@ -20,14 +20,14 @@ static void redis_on_active(kn_fd_t s,int event){
 		int err = 0;
 		socklen_t len = sizeof(err);
 		if (getsockopt(s->fd, SOL_SOCKET, SO_ERROR, &err, &len) == -1) {
-			rc->cb_connect(rc,-1,rc->ud);
+			rc->cb_connect(NULL,-1,rc->ud);
 			//kn_closefd(s);
 			kn_redisDisconnect(rc);
 			return;
 		}
 		if(err){
 			errno = err;
-			rc->cb_connect(rc,errno,rc->ud);
+			rc->cb_connect(NULL,errno,rc->ud);
 			kn_redisDisconnect(rc);
 			//kn_closefd(s);
 			return;
@@ -70,7 +70,7 @@ static void redisconn_destroy(void *ptr){
 		pri->cb(conn,NULL,pri->privdata);
 		free(node);	
 	}
-	free(ptr);
+	free(conn);
 }
 
 static void redisAddRead(void *privdata){

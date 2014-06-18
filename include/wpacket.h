@@ -194,9 +194,12 @@ static inline void wpk_write(wpacket_t w,int8_t *addr,uint32_t size)
 #define CHECK_WRITE(TYPE,VALUE)\
 		if(likely(w->writebuf->capacity - w->wpos >= sizeof(TYPE))){\
 			uint32_t pos = w->wpos;\
-			w->wpos += sizeof(TYPE);\
+			uint32_t size = sizeof(TYPE);\
+			w->wpos += size;\
 			*((TYPE*)(&w->writebuf->buf[pos])) = VALUE;\
-			w->data_size += sizeof(TYPE);\
+			w->data_size += size;\
+			if(w->len) (*w->len) += size;\
+			w->writebuf->size += size;\
 			return;\
 		}
 
