@@ -47,7 +47,7 @@ void     destroy_rbtree(rbtree_t *);
 int8_t   rbtree_insert(rbtree_t,struct rbnode*);
 int8_t   rbtree_erase(struct rbnode*);
 struct rbnode*  rbtree_remove(rbtree_t,void *key);
-void     rbtree_check_vaild(rbtree_t rb);
+//void     rbtree_check_vaild(rbtree_t rb);
 
 
 static inline uint32_t rbtree_size(rbtree_t rb)
