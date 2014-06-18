@@ -196,6 +196,7 @@ static inline void wpk_write(wpacket_t w,int8_t *addr,uint32_t size)
 			uint32_t pos = w->wpos;\
 			w->wpos += sizeof(TYPE);\
 			*((TYPE*)(&w->writebuf->buf[pos])) = VALUE;\
+			w->data_size += sizeof(TYPE);\
 			return;\
 		}
 
