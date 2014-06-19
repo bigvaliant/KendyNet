@@ -117,6 +117,13 @@ static inline kn_ref *cast2ref(ident _ident)
     }ENDTRY;
     return ptr; 
 }
+
+static inline void make_empty_ident(ident *_ident)
+{
+    _ident->identity = 0;
+    _ident->ptr = NULL;
+}
+
 /*
 static inline void make_empty_ident(ident *_ident)
 {
